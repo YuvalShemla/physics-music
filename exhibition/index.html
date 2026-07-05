@@ -133,11 +133,9 @@
     #letter .letter-station { font-size: 12px; letter-spacing: 3px; text-transform: uppercase; color: #8a7a58; margin-bottom: 6px; }
     #letter h2 { font-size: 26px; font-weight: 400; margin-bottom: 4px; font-style: italic; }
     #letter .letter-date { font-size: 13px; color: #8a7a58; margin-bottom: 26px; padding-bottom: 14px; border-bottom: 1px solid rgba(138,122,88,0.35); }
-    #letter .salutation { font-style: italic; margin-bottom: 18px; }
     #letter h3 { font-size: 13px; letter-spacing: 2.5px; text-transform: uppercase; color: #7a6234; margin: 22px 0 8px; }
     #letter p { font-size: 15px; line-height: 1.85; margin-bottom: 12px; }
     #letter em { color: #4a3a1a; }
-    #letter .signoff { margin-top: 28px; font-style: italic; text-align: right; color: #5a4a2a; }
 
     /* ---------- HUD ---------- */
     #hud {
@@ -200,9 +198,7 @@
     <div class="letter-station" id="letter-station"></div>
     <h2 id="letter-title"></h2>
     <div class="letter-date" id="letter-date"></div>
-    <p class="salutation">Dear visitor,</p>
     <div id="letter-body"></div>
-    <p class="signoff">&mdash; The Curator</p>
   </div>
 </div>
 
@@ -311,7 +307,7 @@ const stations = [
   { id: 1, key: 's01', name: 'The Anatomy of a Single Tone', year: '1894', date: '1863 / 1894', color: '#d4a050', wallBg: '#151510',
     phLabel: 'Helmholtz resonators', muLabel: 'Claude Debussy, c.1908', ctLabel: 'Nijinsky as the Faun -- Bakst, 1912',
     wallPhysics: 'In 1863, Helmholtz proved every\nmusical tone is a composite: a\nfundamental pitch plus a ladder of\novertones. The recipe of overtones\ngives each instrument its color --\nits timbre. He revealed the hidden\narchitecture inside every note.',
-    wallConnection: 'THE CONNECTION\n\nHelmholtz showed timbre arises from\nthe overtone series. Debussy, who\nknew this work, composed with that\nstructure -- hearing chords as\ntextures rather than functions.',
+    wallConnection: 'Helmholtz showed timbre arises from\nthe overtone series. Debussy, who\nknew this work, composed with that\nstructure -- hearing chords as\ntextures rather than functions.',
     wallMusic: 'In 1894, Debussy premiered Prelude\na l\'apres-midi d\'un faune, treating\nchords as pure sonorities -- blocks\nof color valued for how they sound,\nnot where they lead. Luminous\ntextures shimmer and dissolve\nrather than march through harmony.',
     physics: 'In 1863, the German physicist Hermann von Helmholtz published <em>On the Sensations of Tone</em>, proving that every musical tone is a composite -- a fundamental pitch plus a ladder of overtones. The recipe of overtones gives each instrument its unique color, its <em>timbre</em>. Using tuning forks and glass resonators, Helmholtz revealed the hidden architecture inside every note.',
     music: 'In 1894, Claude Debussy premiered <em>Prelude a l\'apres-midi d\'un faune</em>. The piece opens with a sinuous flute solo floating free of any clear key. Debussy layers translucent washes that shimmer and dissolve rather than march through conventional harmony. He treats chords as pure <em>sonorities</em> -- blocks of color valued for how they sound, not where they lead.',
@@ -323,7 +319,7 @@ const stations = [
   { id: 2, key: 's02', name: 'Sound in Motion', year: '1908', date: '1842 / 1908', color: '#4080c0', wallBg: '#0a0e18',
     phLabel: 'Doppler wave diagram', muLabel: 'Charles Ives', ctLabel: 'George Ives, bandmaster of Danbury',
     wallPhysics: 'In 1842, Doppler proposed that\nwave frequency changes when source\nand observer move relative to each\nother. An ambulance siren rises as\nit approaches and drops as it\nrecedes -- waves compressed in\nfront, stretched behind.',
-    wallConnection: 'THE CONNECTION\n\nIves\' father positioned marching\nbands on opposite sides of town --\nDoppler\'s principle in action. Ives\ncomposed from the listener\'s moving\nbody: music where your position\nin space shapes what you hear.',
+    wallConnection: 'Ives\' father positioned marching\nbands on opposite sides of town --\nDoppler\'s principle in action. Ives\ncomposed from the listener\'s moving\nbody: music where your position\nin space shapes what you hear.',
     wallMusic: 'Ives\' The Unanswered Question\n(1908): three groups placed apart\nin space -- offstage strings, a solo\ntrumpet, a woodwind quartet -- each\nin its own musical world. The three\nlayers overlap but never converge.',
     physics: 'In 1842, Christian Doppler proposed that wave frequency changes when source and observer move relative to each other. An ambulance siren rises as it approaches and drops as it recedes -- the waves compress in front of the moving source and stretch behind it. It was first tested with trumpeters on a moving train in 1845.',
     music: 'Charles Ives grew up with a father who positioned marching bands on opposite sides of town, each playing different music. From this childhood he composed <em>The Unanswered Question</em> (1908): three groups placed apart in space -- offstage strings, a solo trumpet posing "the perennial question," a woodwind quartet answering with increasing frenzy -- each in its own musical world, overlapping but never converging.',
@@ -335,7 +331,7 @@ const stations = [
   { id: 3, key: 's03', name: 'Simultaneous Perspectives', year: '1913', date: '1905 / 1913', color: '#e05030', wallBg: '#181008',
     phLabel: 'Einstein / Picasso\'s Guitar', muLabel: 'Stravinsky, Rite of Spring', ctLabel: 'Cubist multiple perspectives',
     wallPhysics: 'In 1905, Einstein proved there is\nno absolute frame of reference --\ntime itself is relative. In the same\ndecade, Picasso shattered the single\nviewpoint in painting. Reality\ndepended on where you stood.',
-    wallConnection: 'THE CONNECTION\n\nNo direct influence connects them.\nBut within one decade, physics, art,\nand music each dismantled the idea\nof a single, stable perspective.\nThe connection is synchronous\nrupture.',
+    wallConnection: 'No direct influence connects them.\nBut within one decade, physics, art,\nand music each dismantled the idea\nof a single, stable perspective.\nThe connection is synchronous\nrupture.',
     wallMusic: 'Stravinsky\'s Rite of Spring (1913)\nstacked clashing rhythms, layered\nconflicting keys, drove pounding\nasymmetric accents. Multiple musical\n\'realities\' coexist at once. Its\npremiere caused a riot.',
     physics: 'In 1905, Einstein published Special Relativity: there is no single, absolute frame of reference. Time itself is relative; simultaneity is an illusion. In the same decade, Picasso shattered the single viewpoint in painting -- his 1912 <em>Guitar</em> shows an object from multiple angles at once. Reality depended on where you stood.',
     music: 'On May 29, 1913, Stravinsky\'s <em>The Rite of Spring</em> caused a riot in Paris. He stacked rhythms that refuse to align (<em>polyrhythm</em>), layered clashing keys (<em>polytonality</em>), and drove pounding asymmetric accents. Multiple musical "realities" coexist simultaneously, each with its own pulse and tonal center.',
@@ -347,7 +343,7 @@ const stations = [
   { id: 4, key: 's04', name: 'Music from Thin Air', year: '1920', date: '1920', color: '#9060d0', wallBg: '#0f0a18',
     phLabel: 'A magnetic field made visible', muLabel: 'Clara Rockmore, c.1930s', ctLabel: 'Leon Theremin demonstrating, c.1927',
     wallPhysics: 'In 1920, physicist Leon Theremin\nfound that moving his hand near an\nantenna changed audible pitch. His\nbody acted as a variable capacitor\nin the circuit. The first instrument\nyou play without touching -- made\nof electromagnetic fields.',
-    wallConnection: 'THE CONNECTION\n\nThe theremin IS an electromagnetic\ninstrument. The performer\'s body\nbecomes part of the circuit. Every\ngesture changes the field; every\nchange becomes pitch. Physics made\nmusical, with no intermediary.',
+    wallConnection: 'The theremin IS an electromagnetic\ninstrument. The performer\'s body\nbecomes part of the circuit. Every\ngesture changes the field; every\nchange becomes pitch. Physics made\nmusical, with no intermediary.',
     wallMusic: 'Clara Rockmore transferred her\nviolin virtuosity to the theremin,\ncoaxing a tone part cello, part\nsoprano voice. Her right hand\nsculpted pitch in the air; her left\ncontrolled volume -- proof that an\nelectromagnetic field could sing.',
     physics: 'In 1920, Russian physicist Leon Theremin was researching high-frequency circuits when he noticed that moving his hand near an antenna changed the audible pitch. His body acted as a variable capacitor -- <em>heterodyne oscillation</em> produced an audible difference tone from two radio-frequency signals. He had stumbled upon the first instrument you play without touching.',
     music: 'Clara Rockmore, a Lithuanian-born violin prodigy, became the theremin\'s undisputed virtuoso. She coaxed from it a tone part cello, part soprano voice -- a continuous, vibrato-rich legato unlike anything else in music. Her right hand sculpted pitch in the air; her left controlled volume. Proof that an electromagnetic field could sing.',
@@ -359,7 +355,7 @@ const stations = [
   { id: 5, key: 's05', name: 'The Sound of Nothing', year: '1952', date: '1927 / 1952', color: '#e8e8e8', wallBg: '#141414',
     phLabel: 'The anechoic chamber', muLabel: 'John Cage, 4\'33"', ctLabel: 'The score: TACET',
     wallPhysics: 'Quantum mechanics revealed that\nperfect emptiness does not exist.\nEven in a vacuum, virtual particles\nflicker in and out of existence.\n\'Nothing\' is not nothing. Empty\nspace has structure, energy,\nand fluctuation.',
-    wallConnection: 'THE CONNECTION\n\nPhysicist Donald Spector argued that\n4\'33" represents the quantum vacuum:\nthe absence of deliberate signal\nreveals that \'empty\' space is full\nof activity. Physics and music both\ndiscovered the impossibility\nof nothing.',
+    wallConnection: 'Physicist Donald Spector argued that\n4\'33" represents the quantum vacuum:\nthe absence of deliberate signal\nreveals that \'empty\' space is full\nof activity. Physics and music both\ndiscovered the impossibility\nof nothing.',
     wallMusic: 'In 1951, Cage sat in Harvard\'s\nanechoic chamber expecting silence --\nand heard his own nervous system\nand blood. In 1952 he premiered\n4\'33": the performer plays nothing.\nThe \'music\' is whatever ambient\nsound occurs. Silence is impossible.',
     physics: 'Quantum mechanics revealed that perfect emptiness does not exist. Even in a vacuum, virtual particles flicker into existence and annihilate on timescales too brief to observe, but their effects are measurable -- the <em>Casimir effect</em> pushes two plates together using nothing but vacuum fluctuations. The quantum vacuum <em>seethes</em>. "Nothing" is not nothing.',
     music: 'In 1951, Cage visited Harvard\'s anechoic chamber expecting silence. Instead he heard two sounds: his nervous system and his blood circulating. Silence was unreachable. In 1952 he premiered <em>4\'33"</em>: three movements during which the performer plays nothing. The "music" is whatever ambient sounds occur -- and every performance is unique. In 2020 the Berlin Philharmonic performed it to an empty, locked-down hall.',
@@ -372,7 +368,7 @@ const stations = [
   { id: 6, key: 's06', name: 'Music by Probability', year: '1955', date: '1860s / 1955', color: '#60a080', wallBg: '#0c120e',
     phLabel: 'Brownian motion -- Perrin, 1908', muLabel: 'Xenakis, Pithoprakta score', ctLabel: 'Glissandi as particles',
     wallPhysics: 'Maxwell and Boltzmann described\nbillions of gas molecules using\nprobability distributions. Brownian\nmotion -- the random jiggling of\nparticles -- became a visible\nsignature of statistical reality.\nOrder emerges from randomness.',
-    wallConnection: 'THE CONNECTION\n\nXenakis imported the equations\ndirectly into his method. The\norchestra becomes a gas: 46\nindependent particles whose\ncollective motion produces emergent\nform. Published in Formalized\nMusic (1971).',
+    wallConnection: 'Xenakis imported the equations\ndirectly into his method. The\norchestra becomes a gas: 46\nindependent particles whose\ncollective motion produces emergent\nform. Published in Formalized\nMusic (1971).',
     wallMusic: 'In Pithoprakta (1955), Xenakis had\n46 string players perform\nindependent glissandi, each\ndetermined by Maxwell-Boltzmann\nequations. The result is a seething\nswarm -- the sonic equivalent of\na gas cloud.',
     physics: 'In the 1860s, Maxwell and Boltzmann developed statistical mechanics -- describing billions of gas molecules not individually but through probability distributions. Brownian motion, the random jiggling of pollen grains buffeted by invisible molecules, became a visible signature of this statistical reality. Order emerges from randomness.',
     music: 'Iannis Xenakis -- trained as an engineer and architect under Le Corbusier -- applied statistical mechanics directly in <em>Pithoprakta</em> (1955-56). Each of 46 string players performs an independent glissando with pitch, speed, and direction determined by Maxwell-Boltzmann equations. The result is a seething, swarming mass -- the sonic equivalent of a gas cloud.',
@@ -384,7 +380,7 @@ const stations = [
   { id: 7, key: 's07', name: 'Sound After the Unthinkable', year: '1960', date: '1945 / 1960', color: '#b8b8b8', wallBg: '#0f0f0f',
     phLabel: 'Hiroshima, August 6, 1945', muLabel: 'Penderecki\'s graphic score', ctLabel: 'Notation like particle tracks',
     wallPhysics: 'On July 16, 1945, physicists\ndetonated the first nuclear weapon.\nFission -- splitting atomic nuclei --\nreleased energy equal to 21,000\ntons of TNT. Physics had produced\nthe most terrifying object in\nhuman history.',
-    wallConnection: 'THE CONNECTION\n\nThe connection is moral response.\nPenderecki used music to bear\nwitness to what nuclear physics had\nmade possible. His graphic score\nresembles particle trajectory\ndiagrams -- dense branching lines\nlike a cloud chamber.',
+    wallConnection: 'The connection is moral response.\nPenderecki used music to bear\nwitness to what nuclear physics had\nmade possible. His graphic score\nresembles particle trajectory\ndiagrams -- dense branching lines\nlike a cloud chamber.',
     wallMusic: 'Penderecki\'s Threnody for the\nVictims of Hiroshima (1960) uses no\nmelody, no harmony -- only tone\nclusters and unearthly glissandi.\nHe invented a new graphic notation\nfor 52 strings. The sound is\na scream.',
     physics: 'On July 16, 1945, physicists detonated the first nuclear weapon in the New Mexico desert. Nuclear fission -- splitting atomic nuclei -- released energy equivalent to 21,000 tons of TNT. Weeks later, bombs fell on Hiroshima and Nagasaki, killing over 200,000 people. Physics had produced the most terrifying object in human history.',
     music: 'Penderecki\'s <em>Threnody for the Victims of Hiroshima</em> (1960) uses no melody and no harmony. He invented a graphic notation -- squiggles, blacked-out blocks, time-space diagrams -- to direct 52 strings in <em>tone clusters</em>, col legno strikes, and unearthly quarter-tone glissandi. The sound is a scream: a wall of anguished noise that tightens, shrieks, and fades to silence.',
@@ -396,7 +392,7 @@ const stations = [
   { id: 8, key: 's08', name: 'The Room Reveals Itself', year: '1969', date: '1969', color: '#c0a060', wallBg: '#121210',
     phLabel: 'Chladni figures: resonance made visible', muLabel: 'Alvin Lucier', ctLabel: 'Speech dissolving into tone',
     wallPhysics: 'Every room has resonant\nfrequencies -- pitches where sound\nwaves reflect off the walls in\npatterns that reinforce themselves,\ncreating standing waves. The room\nacts as a filter. Every room has\na sonic fingerprint.',
-    wallConnection: 'THE CONNECTION\n\nThe composition IS the physics.\nNo metaphor. Lucier designed a\nprocess that physically demonstrates\nacoustic resonance. The room becomes\nthe instrument, the score, and\nthe performer.',
+    wallConnection: 'The composition IS the physics.\nNo metaphor. Lucier designed a\nprocess that physically demonstrates\nacoustic resonance. The room becomes\nthe instrument, the score, and\nthe performer.',
     wallMusic: 'Lucier recorded himself speaking,\nplayed it back into the room,\nre-recorded, and repeated 32 times.\nHis voice dissolved into shimmering\ntones -- the room\'s resonant\nfrequencies. The room was singing.',
     physics: 'Every enclosed space has resonant frequencies -- pitches at which sound waves reflect off walls in patterns that reinforce themselves, creating standing waves. The room acts as a filter, strengthening some frequencies and suppressing others. Every room has a sonic fingerprint.',
     music: 'In 1969, Alvin Lucier recorded himself speaking: <em>"I am sitting in a room different from the one you are in now..."</em> He played the tape back into the room, re-recorded it, and repeated the cycle 32 times. Consonants blurred, vowels smeared, and his voice -- including his stutter -- dissolved into pure shimmering tones: the resonant frequencies of the room itself. The room was singing.',
@@ -408,7 +404,7 @@ const stations = [
   { id: 9, key: 's09', name: 'Orchestrating the Spectrogram', year: '1975', date: '1822 / 1975', color: '#30a0c0', wallBg: '#080e18',
     phLabel: 'Joseph Fourier', muLabel: 'Grisey, Partiels', ctLabel: 'Spectrogram becomes score',
     wallPhysics: 'In 1822, Fourier proved any sound\ncan be decomposed into a sum of\nsine waves. A spectrogram makes\nthis visible -- showing which\nfrequencies are present in a sound\nand how strong each one is.',
-    wallConnection: 'THE CONNECTION\n\nThe most direct physics-to-music\ntranslation in the exhibition.\nGrisey fed sound into a machine,\nread the data, and transcribed it\nonto orchestral staves. The ensemble\nplays a spectrogram.',
+    wallConnection: 'The most direct physics-to-music\ntranslation in the exhibition.\nGrisey fed sound into a machine,\nread the data, and transcribed it\nonto orchestral staves. The ensemble\nplays a spectrogram.',
     wallMusic: 'Grisey recorded a trombone note,\nanalyzed its spectrum at IRCAM,\nthen orchestrated each overtone:\nfundamental to trombone, 2nd partial\nto horn, 3rd to clarinet... Partiels\n(1975) is the inside of a sound\nmade audible.',
     physics: 'In 1822, Joseph Fourier proved that any complex waveform can be decomposed into simple sine waves of different frequencies and amplitudes. Applied to sound, this means any tone -- a trombone blast, a vowel, a cymbal crash -- can be displayed as a <em>spectrogram</em>: a visual map of its frequency components.',
     music: 'In 1975, Gerard Grisey recorded a low E on a trombone and studied its spectrogram at IRCAM. Then he <em>orchestrated the spectrogram</em>: each overtone assigned to a different instrument -- fundamental to trombone, second partial to horn, third to clarinet, upward through the ensemble. <em>Partiels</em> begins as a single trombone note and blooms into a shimmering chord that is literally the inside of that note made audible.',
@@ -421,7 +417,7 @@ const stations = [
   { id: 10, key: 's10', name: 'Quantum Duet', year: '2023', date: '2023', color: '#c050a0', wallBg: '#0a0812',
     phLabel: 'IBM Quantum System One', muLabel: 'Miranda, Qubism', ctLabel: 'Bloch sphere / quantum circuit',
     wallPhysics: 'A quantum computer uses qubits --\nbits that exist in superposition of\n0 and 1 at once. Measurement\ncollapses superposition into a\ndefinite value, and the outcome\nis fundamentally probabilistic.',
-    wallConnection: 'THE CONNECTION\n\n160 years from Helmholtz to here.\nQuantum computation generates\nmusical decisions through\nmeasurement and superposition.\nThe responding \'performer\' is a\nquantum computer. Physics is not\nmetaphor but collaborator.',
+    wallConnection: '160 years from Helmholtz to here.\nQuantum computation generates\nmusical decisions through\nmeasurement and superposition.\nThe responding \'performer\' is a\nquantum computer. Physics is not\nmetaphor but collaborator.',
     wallMusic: 'In Miranda\'s Qubism (2023), a\nviolinist plays a phrase and an IBM\nquantum computer responds. The\nprobabilistic output determines\npitches and rhythms. No two\nperformances are identical.\nCall-and-response meets quantum.',
     physics: 'A quantum computer uses <em>qubits</em> -- quantum bits that exist in superposition of both 0 and 1 simultaneously. Only when you measure a qubit does it collapse to a definite value, and the outcome is fundamentally probabilistic. In 2022, IBM unveiled the Eagle processor with 127 qubits -- powerful enough for its outputs to drive creative decisions.',
     music: 'In Eduardo Reck Miranda\'s <em>Qubism</em> (2023), a violinist plays a phrase; an IBM quantum computer processes it through a quantum circuit, and the probabilistic output of qubit measurements determines the responding phrase. No two performances are identical. The ancient form of call-and-response -- heard in this course from spirituals to jazz -- meets the newest technology on Earth.',
@@ -524,12 +520,14 @@ function buildStation(s) {
     color: s.color, width: '2.6', anchor: 'center', align: 'center' }));
   root.appendChild(el('a-text', { value: 'THE MUSIC', position: '4.5 3.9 -4.98',
     color: s.color, width: '2.6', anchor: 'center', align: 'center' }));
+  root.appendChild(el('a-text', { value: 'THE CONNECTION', position: '0 3.9 -4.98',
+    color: s.color, width: '2.6', anchor: 'center', align: 'center' }));
 
   // Three framed media slots: physics (left), center, music (right)
   // Raised so the captions below them clear the wall paragraphs
   const slots = [
     { name: 'physics', x: -4.5, y: 2.8, w: 2.5, h: 1.7, label: s.phLabel },
-    { name: 'center',  x: 0,    y: 2.7, w: 2.9, h: 1.95, label: s.ctLabel },
+    { name: 'center',  x: 0,    y: 2.82, w: 2.9, h: 1.9, label: s.ctLabel },
     { name: 'music',   x: 4.5,  y: 2.8, w: 2.5, h: 1.7, label: s.muLabel }
   ];
   for (const slot of slots) {
@@ -554,7 +552,7 @@ function buildStation(s) {
   // Wall texts — each on a framed wooden board
   const wallTexts = [
     { value: s.wallPhysics, position: '-4.5 0.85 -4.98', color: '#c5c5c5', width: '3.1' },
-    { value: s.wallConnection, position: '0 0.78 -4.98', color: '#e2e2e2', width: '3.3' },
+    { value: s.wallConnection, position: '0 0.78 -4.98', color: '#c5c5c5', width: '3.1' },
     { value: s.wallMusic, position: '4.5 0.85 -4.98', color: '#c5c5c5', width: '3.1' }
   ];
   for (const wt of wallTexts) {
@@ -748,14 +746,14 @@ function setStation(id) {
   panelCollapsed = false;
   const s = stations[id];
 
-  // Auto-play this station's music after 3 seconds of dwelling here
+  // Auto-play this station's music on arrival
   if (dwellTimer) clearTimeout(dwellTimer);
   if (s.id >= 1 && s.id <= 10) {
     dwellTimer = setTimeout(() => {
       if (currentStation !== id) return;
       const a = audioPlayers[s.key];
       if (a && a.paused) { stopAllMedia(); a.play().catch(() => {}); updateAudioButton(); }
-    }, 3000);
+    }, 0);
   }
   document.getElementById('current-station-label').textContent =
     s.id === 0 ? 'The Rotunda Center' : s.id === 11 ? 'The Great Door -- where the circle begins and ends' : `Station ${String(s.id).padStart(2, '0')} of 10 -- ${s.name}`;

@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Waves, Particles, and Sound — A-Frame POC</title>
+  <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+  <style>
+    #info-overlay {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.85);
+      color: #fff;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+      font-size: 14px;
+      z-index: 999;
+      text-align: center;
+      pointer-events: none;
+    }
+    #audio-controls {
+      position: fixed;
+      bottom: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 999;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    #audio-controls button {
+      background: rgba(80, 200, 255, 0.9);
+      color: #000;
+      border: none;
+      padding: 10px 24px;
+      border-radius: 6px;
+      font-size: 14px;
+      cursor: pointer;
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+      font-weight: 600;
+    }
+    #audio-controls button:hover {
+      background: rgba(80, 200, 255, 1);
+    }
+    #title-card {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.85);
+      color: #50c8ff;
+      padding: 10px 30px;
+      border-radius: 8px;
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+      font-size: 18px;
+      font-weight: 600;
+      z-index: 999;
+      text-align: center;
+      letter-spacing: 1px;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="title-card">WAVES, PARTICLES, AND SOUND</div>
+  <div id="info-overlay">Use WASD to move, mouse to look around. Click to enter.</div>
+  <div id="audio-controls">
+    <button onclick="toggleAudio()">&#9654; Play Theremin Audio</button>
+  </div>
+
+  <a-scene fog="type: exponential; color: #111; density: 0.035"
+           renderer="antialias: true; colorManagement: true"
+           vr-mode-ui="enabled: false">
+
+    <!-- ===== CAMERA ===== -->
+    <a-entity id="rig" position="0 0 8">
+      <a-camera
+        look-controls="pointerLockEnabled: true"
+        wasd-controls="acceleration: 20"
+        position="0 1.6 0">
+      </a-camera>
+    </a-entity>
+
+    <!-- ===== ROOM GEOMETRY ===== -->
+    <!-- Floor -->
+    <a-plane position="0 0 0" rotation="-90 0 0" width="14" height="20"
+             color="#1a1a1a" roughness="0.8"></a-plane>
+
+    <!-- Ceiling -->
+    <a-plane position="0 5 0" rotation="90 0 0" width="14" height="20"
+             color="#0d0d0d" roughness="1"></a-plane>
+
+    <!-- Back wall (main exhibition wall) -->
+    <a-plane position="0 2.5 -5" width="14" height="5"
+             color="#1f1f1f" roughness="0.9"></a-plane>
+
+    <!-- Left wall -->
+    <a-plane position="-7 2.5 0" rotation="0 90 0" width="20" height="5"
+             color="#1a1a1a" roughness="0.9"></a-plane>
+
+    <!-- Right wall -->
+    <a-plane position="7 2.5 0" rotation="0 -90 0" width="20" height="5"
+             color="#1a1a1a" roughness="0.9"></a-plane>
+
+    <!-- Front wall (behind visitor) -->
+    <a-plane position="0 2.5 10" rotation="0 180 0" width="14" height="5"
+             color="#1f1f1f" roughness="0.9"></a-plane>
+
+    <!-- ===== STATION: THE THEREMIN ===== -->
+
+    <!-- === LEFT SIDE: PHYSICS === -->
+
+    <!-- Physics title -->
+    <a-text value="THE PHYSICS"
+            position="-4.5 4.2 -4.95"
+            color="#50c8ff"
+            width="4"
+            font="mozillavr"
+            anchor="center"
+            align="center"></a-text>
+
+    <!-- Physics subtitle -->
+    <a-text value="Electromagnetism, 1920"
+            position="-4.5 3.9 -4.95"
+            color="#888"
+            width="2.5"
+            font="mozillavr"
+            anchor="center"
+            align="center"></a-text>
+
+    <!-- Leon Theremin image frame (placeholder - colored plane) -->
+    <a-plane position="-4.5 2.8 -4.95" width="2.4" height="1.8"
+             color="#2a2a2a" roughness="0.5"></a-plane>
+    <!-- Image label -->
+    <a-text value="[ Leon Theremin, c.1928 ]"
+            position="-4.5 1.7 -4.95"
+            color="#666"
+            width="2"
+            font="mozillavr"
+            anchor="center"
+            align="center"></a-text>
+
+    <!-- Physics explanation text -->
+    <a-text value="In 1920, Russian physicist Leon Theremin\ninvented an instrument you play without\ntouching. Two antennas create electromagnetic\nfields. Your hands change the capacitance\nin the circuit, shifting the frequency of\noscillators. The difference between two\nradio-frequency signals produces audible\npitch. Move one hand: the note changes.\nMove the other: the volume changes.\n\nYour body becomes part of the circuit.\nThe invisible waves around us become music."
+            position="-4.5 1.0 -4.95"
+            color="#ccc"
+            width="3.2"
+            font="mozillavr"
+            anchor="center"
+            align="center"
+            wrap-count="42"
+            line-height="70"></a-text>
+
+    <!-- === CENTER: CONNECTION === -->
+
+    <!-- Station number and title -->
+    <a-text value="STATION 2"
+            position="0 4.5 -4.95"
+            color="#50c8ff"
+            width="6"
+            font="mozillavr"
+            anchor="center"
+            align="center"></a-text>
+
+    <a-text value="The Invisible Instrument"
+            position="0 4.1 -4.95"
+            color="#fff"
+            width="5"
+            font="mozillavr"
+            anchor="center"
+            align="center"></a-text>
+
+    <a-text value="ELECTROMAGNETISM BECOMES MUSIC"
+            position="0 3.75 -4.95"
+            color="#888"
+            width="3"
+            font="mozillavr"
+            anchor="center"
+            align="center"></a-text>
+
+    <!-- Electromagnetic field diagram (placeholder) -->
+    <a-plane position="0 2.5 -4.95" width="2.8" height="2"
+             color="#1a2a3a" roughness="0.5"></a-plane>
+    <a-text value="[ Electromagnetic Field Diagram ]\n\n   antenna\n     |\n  ~~ | ~~  field lines\n ~  | |  ~\n~   | |   ~\n     |\n   hand"
+            position="0 2.5 -4.94"
+            color="#50c8ff"
+            width="2.5"
+            font="mozillavr"
+            anchor="center"
+            align="center"
+            wrap-count="35"></a-text>
+
+    <!-- Connection text -->
+    <a-text value="THE CONNECTION\n\nThe theremin is the first instrument born\nentirely from physics. No strings, no air\ncolumns, no vibrating surfaces — just\nelectromagnetic fields and a human body.\nIt proves that music exists in the invisible\nwaves all around us. We just need the\nright instrument to hear it."
+            position="0 0.8 -4.95"
+            color="#e0e0e0"
+            width="3.5"
+            font="mozillavr"
+            anchor="center"
+            align="center"
+            wrap-count="42"
+            line-height="70"></a-text>
+
+    <!-- === RIGHT SIDE: MUSIC === -->
+
+    <!-- Music title -->
+    <a-text value="THE MUSIC"
+            position="4.5 4.2 -4.95"
+            color="#ff8050"
+            width="4"
+            font="mozillavr"
+            anchor="center"
+            align="center"></a-text>
+
+    <!-- Music subtitle -->
+    <a-text value="Clara Rockmore, Theremin Virtuosa"
+            position="4.5 3.9 -4.95"
+            color="#888"
+            width="2.5"
+            font="mozillavr"
+            anchor="center"
+            align="center"></a-text>
+
+    <!-- Clara Rockmore image frame (placeholder) -->
+    <a-plane position="4.5 2.8 -4.95" width="2.4" height="1.8"
+             color="#2a2a1a" roughness="0.5"></a-plane>
+    <a-text value="[ Clara Rockmore, c.1930s ]"
+            position="4.5 1.7 -4.95"
+            color="#666"
+            width="2"
+            font="mozillavr"
+            anchor="center"
+            align="center"></a-text>
+
+    <!-- Music description text -->
+    <a-text value="Clara Rockmore (1911-1998) was a child\nprodigy violinist from Lithuania who became\nthe greatest theremin performer in history.\nShe transferred her violin technique —\nlyricism, vibrato, perfect pitch — to an\ninstrument most people found unplayable.\n\nHer performances of classical repertoire\nproved the theremin was not a gimmick\nbut a serious musical voice, capable of\nthe same expression as any instrument."
+            position="4.5 1.0 -4.95"
+            color="#ccc"
+            width="3.2"
+            font="mozillavr"
+            anchor="center"
+            align="center"
+            wrap-count="42"
+            line-height="70"></a-text>
+
+    <!-- ===== LIGHTING ===== -->
+    <!-- Ambient (dim) -->
+    <a-light type="ambient" color="#222" intensity="0.4"></a-light>
+
+    <!-- Main overhead light -->
+    <a-light type="point" position="0 4.5 -2" intensity="0.6"
+             color="#ffffff" distance="12" decay="2"></a-light>
+
+    <!-- Physics spotlight (blue tint) -->
+    <a-light type="spot" position="-4.5 4.8 -3"
+             target="#physics-target"
+             color="#80ccff" intensity="0.8"
+             angle="40" penumbra="0.3" distance="8" decay="1.5"></a-light>
+    <a-entity id="physics-target" position="-4.5 2.5 -5"></a-entity>
+
+    <!-- Music spotlight (warm tint) -->
+    <a-light type="spot" position="4.5 4.8 -3"
+             target="#music-target"
+             color="#ffcc80" intensity="0.8"
+             angle="40" penumbra="0.3" distance="8" decay="1.5"></a-light>
+    <a-entity id="music-target" position="4.5 2.5 -5"></a-entity>
+
+    <!-- Center spotlight (white) -->
+    <a-light type="spot" position="0 4.8 -3"
+             target="#center-target"
+             color="#ffffff" intensity="0.7"
+             angle="35" penumbra="0.3" distance="8" decay="1.5"></a-light>
+    <a-entity id="center-target" position="0 2.5 -5"></a-entity>
+
+    <!-- ===== FLOOR MARKERS ===== -->
+    <!-- Subtle path indicator -->
+    <a-ring position="0 0.01 4" rotation="-90 0 0"
+            radius-inner="0.3" radius-outer="0.5"
+            color="#333" opacity="0.5"></a-ring>
+    <a-text value="Stand here"
+            position="0 0.02 3.2" rotation="-90 0 0"
+            color="#555" width="2"
+            font="mozillavr"
+            anchor="center" align="center"></a-text>
+
+    <!-- ===== DECORATIVE ELEMENTS ===== -->
+    <!-- Thin accent line on wall -->
+    <a-plane position="0 0.3 -4.96" width="12" height="0.02"
+             color="#50c8ff" opacity="0.3"></a-plane>
+
+    <!-- Divider lines between sections -->
+    <a-plane position="-2.2 2.5 -4.96" width="0.01" height="4.5"
+             color="#333" opacity="0.5"></a-plane>
+    <a-plane position="2.2 2.5 -4.96" width="0.01" height="4.5"
+             color="#333" opacity="0.5"></a-plane>
+
+  </a-scene>
+
+  <script>
+    // Audio control
+    let audio = null;
+    let isPlaying = false;
+
+    function toggleAudio() {
+      const btn = document.querySelector('#audio-controls button');
+      if (!audio) {
+        // Use a public domain theremin-like sound or placeholder
+        // In production, replace with Clara Rockmore performance excerpt
+        audio = new Audio('https://upload.wikimedia.org/wikipedia/commons/4/44/Etherwave_Theremin_middle_range.ogg');
+        audio.loop = true;
+      }
+      if (isPlaying) {
+        audio.pause();
+        btn.innerHTML = '&#9654; Play Theremin Audio';
+        isPlaying = false;
+      } else {
+        audio.play().catch(e => console.log('Audio play failed:', e));
+        btn.innerHTML = '&#9646;&#9646; Pause Audio';
+        isPlaying = true;
+      }
+    }
+
+    // Update info overlay on scene load
+    document.querySelector('a-scene').addEventListener('loaded', () => {
+      setTimeout(() => {
+        document.getElementById('info-overlay').textContent =
+          'WASD to move | Mouse to look | Click to enter look mode';
+      }, 3000);
+    });
+  </script>
+</body>
+</html>

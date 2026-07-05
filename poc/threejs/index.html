@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Waves, Particles, and Sound — Three.js POC</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { overflow: hidden; background: #000; font-family: 'Helvetica Neue', Arial, sans-serif; }
+    canvas { display: block; }
+    #blocker {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.7); z-index: 10;
+      display: flex; align-items: center; justify-content: center;
+      flex-direction: column; cursor: pointer;
+    }
+    #blocker h1 { color: #50c8ff; font-size: 28px; margin-bottom: 10px; letter-spacing: 2px; }
+    #blocker p { color: #aaa; font-size: 16px; margin-bottom: 20px; }
+    #blocker .start-btn {
+      background: #50c8ff; color: #000; border: none; padding: 14px 40px;
+      font-size: 16px; border-radius: 8px; cursor: pointer; font-weight: 600;
+    }
+    #hud {
+      position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+      background: rgba(0,0,0,0.85); color: #fff; padding: 10px 24px;
+      border-radius: 8px; font-size: 13px; z-index: 5; pointer-events: none;
+    }
+    #audio-btn {
+      position: fixed; bottom: 70px; left: 50%; transform: translateX(-50%);
+      background: rgba(80,200,255,0.9); color: #000; border: none;
+      padding: 10px 24px; border-radius: 6px; font-size: 14px;
+      cursor: pointer; font-weight: 600; z-index: 5;
+    }
+    #station-title {
+      position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+      background: rgba(0,0,0,0.85); color: #50c8ff; padding: 10px 30px;
+      border-radius: 8px; font-size: 18px; font-weight: 600; z-index: 5;
+      letter-spacing: 1px; pointer-events: none; display: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="blocker">
+    <h1>WAVES, PARTICLES, AND SOUND</h1>
+    <p>Station 2: The Invisible Instrument — Electromagnetism Becomes Music</p>
+    <button class="start-btn" id="start-btn">Click to Enter Gallery</button>
+    <p style="margin-top:10px;font-size:12px;color:#666">WASD to move | Mouse to look | ESC to release cursor</p>
+  </div>
+  <div id="station-title">STATION 2 — THE INVISIBLE INSTRUMENT</div>
+  <div id="hud">WASD to move | Mouse to look | ESC to exit</div>
+  <button id="audio-btn" style="display:none" onclick="toggleAudio()">&#9654; Play Theremin Audio</button>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+      }
+    }
+  </script>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
+
+    // Scene setup
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0a0a0a);
+    scene.fog = new THREE.FogExp2(0x0a0a0a, 0.04);
+
+    const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 100);
+    camera.position.set(0, 1.6, 8);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.0;
+    document.body.appendChild(renderer.domElement);
+
+    // Controls
+    const controls = new PointerLockControls(camera, document.body);
+    const blocker = document.getElementById('blocker');
+    const startBtn = document.getElementById('start-btn');
+
+    startBtn.addEventListener('click', () => controls.lock());
+    controls.addEventListener('lock', () => {
+      blocker.style.display = 'none';
+      document.getElementById('station-title').style.display = 'block';
+      document.getElementById('audio-btn').style.display = 'block';
+    });
+    controls.addEventListener('unlock', () => {
+      blocker.style.display = 'flex';
+      document.getElementById('station-title').style.display = 'none';
+    });
+
+    // Movement
+    const velocity = new THREE.Vector3();
+    const direction = new THREE.Vector3();
+    const keys = { forward: false, backward: false, left: false, right: false };
+
+    document.addEventListener('keydown', (e) => {
+      switch (e.code) {
+        case 'KeyW': case 'ArrowUp': keys.forward = true; break;
+        case 'KeyS': case 'ArrowDown': keys.backward = true; break;
+        case 'KeyA': case 'ArrowLeft': keys.left = true; break;
+        case 'KeyD': case 'ArrowRight': keys.right = true; break;
+      }
+    });
+    document.addEventListener('keyup', (e) => {
+      switch (e.code) {
+        case 'KeyW': case 'ArrowUp': keys.forward = false; break;
+        case 'KeyS': case 'ArrowDown': keys.backward = false; break;
+        case 'KeyA': case 'ArrowLeft': keys.left = false; break;
+        case 'KeyD': case 'ArrowRight': keys.right = false; break;
+      }
+    });
+
+    // Room geometry
+    const roomMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.9 });
+    const wallMat = new THREE.MeshStandardMaterial({ color: 0x1f1f1f, roughness: 0.9 });
+
+    // Floor
+    const floor = new THREE.Mesh(new THREE.PlaneGeometry(14, 20), roomMat);
+    floor.rotation.x = -Math.PI / 2;
+    floor.receiveShadow = true;
+    scene.add(floor);
+
+    // Ceiling
+    const ceiling = new THREE.Mesh(new THREE.PlaneGeometry(14, 20),
+      new THREE.MeshStandardMaterial({ color: 0x0d0d0d, roughness: 1 }));
+    ceiling.rotation.x = Math.PI / 2;
+    ceiling.position.y = 5;
+    scene.add(ceiling);
+
+    // Walls
+    const backWall = new THREE.Mesh(new THREE.PlaneGeometry(14, 5), wallMat);
+    backWall.position.set(0, 2.5, -5);
+    scene.add(backWall);
+
+    const frontWall = new THREE.Mesh(new THREE.PlaneGeometry(14, 5), wallMat);
+    frontWall.position.set(0, 2.5, 10);
+    frontWall.rotation.y = Math.PI;
+    scene.add(frontWall);
+
+    const leftWall = new THREE.Mesh(new THREE.PlaneGeometry(20, 5), roomMat);
+    leftWall.position.set(-7, 2.5, 2.5);
+    leftWall.rotation.y = Math.PI / 2;
+    scene.add(leftWall);
+
+    const rightWall = new THREE.Mesh(new THREE.PlaneGeometry(20, 5), roomMat);
+    rightWall.position.set(7, 2.5, 2.5);
+    rightWall.rotation.y = -Math.PI / 2;
+    scene.add(rightWall);
+
+    // Artwork frames (placeholder colored rectangles)
+    function createFrame(x, y, z, w, h, color) {
+      const frame = new THREE.Mesh(
+        new THREE.PlaneGeometry(w, h),
+        new THREE.MeshStandardMaterial({ color, roughness: 0.5 })
+      );
+      frame.position.set(x, y, z);
+      scene.add(frame);
+      return frame;
+    }
+
+    // Physics image (left)
+    createFrame(-4.5, 2.8, -4.98, 2.4, 1.8, 0x2a3040);
+    // Music image (right)
+    createFrame(4.5, 2.8, -4.98, 2.4, 1.8, 0x40302a);
+    // Center diagram
+    createFrame(0, 2.5, -4.98, 2.8, 2.0, 0x1a2a3a);
+
+    // Text labels using canvas textures
+    function createTextPlane(text, x, y, z, width, fontSize, color, bgColor, maxWidth) {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = 1024;
+      canvas.height = 512;
+
+      ctx.fillStyle = bgColor || 'rgba(0,0,0,0)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.fillStyle = color || '#ffffff';
+      ctx.font = `${fontSize || 24}px Helvetica Neue, Arial, sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'top';
+
+      // Word wrap
+      const words = text.split(' ');
+      let line = '';
+      let lineY = 20;
+      const lineHeight = (fontSize || 24) * 1.4;
+      const mw = maxWidth || 950;
+
+      for (const word of words) {
+        const test = line + word + ' ';
+        if (ctx.measureText(test).width > mw && line !== '') {
+          ctx.fillText(line.trim(), canvas.width / 2, lineY);
+          line = word + ' ';
+          lineY += lineHeight;
+        } else {
+          line = test;
+        }
+      }
+      ctx.fillText(line.trim(), canvas.width / 2, lineY);
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.needsUpdate = true;
+
+      const aspect = canvas.width / canvas.height;
+      const plane = new THREE.Mesh(
+        new THREE.PlaneGeometry(width, width / aspect),
+        new THREE.MeshBasicMaterial({ map: texture, transparent: true })
+      );
+      plane.position.set(x, y, z);
+      scene.add(plane);
+      return plane;
+    }
+
+    // Station title
+    createTextPlane('STATION 2', 0, 4.5, -4.97, 4, 64, '#50c8ff');
+    createTextPlane('The Invisible Instrument', 0, 4.1, -4.97, 4, 48, '#ffffff');
+    createTextPlane('ELECTROMAGNETISM BECOMES MUSIC', 0, 3.75, -4.97, 3.5, 28, '#888888');
+
+    // Section headers
+    createTextPlane('THE PHYSICS', -4.5, 4.2, -4.97, 2.5, 40, '#50c8ff');
+    createTextPlane('THE MUSIC', 4.5, 4.2, -4.97, 2.5, 40, '#ff8050');
+
+    // Physics text
+    createTextPlane(
+      'In 1920, Russian physicist Leon Theremin invented an instrument you play without touching. Two antennas create electromagnetic fields. Your hands change the capacitance in the circuit, shifting oscillator frequencies. Your body becomes part of the circuit. The invisible waves around us become music.',
+      -4.5, 1.0, -4.97, 3.2, 22, '#cccccc'
+    );
+
+    // Music text
+    createTextPlane(
+      'Clara Rockmore (1911-1998) transferred her violin virtuosity to the theremin, proving it was a serious musical instrument. Her performances of classical repertoire showed that electromagnetic physics could produce the same lyrical expression as centuries-old acoustic instruments.',
+      4.5, 1.0, -4.97, 3.2, 22, '#cccccc'
+    );
+
+    // Connection text
+    createTextPlane(
+      'THE CONNECTION: The theremin is the first instrument born entirely from physics. No strings, no air columns — just electromagnetic fields and a human body.',
+      0, 0.7, -4.97, 3.5, 22, '#e0e0e0'
+    );
+
+    // Accent line
+    const accentGeo = new THREE.PlaneGeometry(12, 0.01);
+    const accentMat = new THREE.MeshBasicMaterial({ color: 0x50c8ff, transparent: true, opacity: 0.4 });
+    const accent = new THREE.Mesh(accentGeo, accentMat);
+    accent.position.set(0, 0.3, -4.97);
+    scene.add(accent);
+
+    // Divider lines
+    for (const x of [-2.2, 2.2]) {
+      const div = new THREE.Mesh(
+        new THREE.PlaneGeometry(0.005, 4.5),
+        new THREE.MeshBasicMaterial({ color: 0x333333, transparent: true, opacity: 0.5 })
+      );
+      div.position.set(x, 2.5, -4.97);
+      scene.add(div);
+    }
+
+    // Lighting
+    const ambient = new THREE.AmbientLight(0x222222, 0.5);
+    scene.add(ambient);
+
+    const mainLight = new THREE.PointLight(0xffffff, 0.6, 12, 2);
+    mainLight.position.set(0, 4.5, -1);
+    scene.add(mainLight);
+
+    // Physics spotlight (blue)
+    const physicsSpot = new THREE.SpotLight(0x80ccff, 1, 10, Math.PI / 5, 0.4);
+    physicsSpot.position.set(-4.5, 4.8, -3);
+    physicsSpot.target.position.set(-4.5, 2.5, -5);
+    scene.add(physicsSpot);
+    scene.add(physicsSpot.target);
+
+    // Music spotlight (warm)
+    const musicSpot = new THREE.SpotLight(0xffcc80, 1, 10, Math.PI / 5, 0.4);
+    musicSpot.position.set(4.5, 4.8, -3);
+    musicSpot.target.position.set(4.5, 2.5, -5);
+    scene.add(musicSpot);
+    scene.add(musicSpot.target);
+
+    // Center spotlight
+    const centerSpot = new THREE.SpotLight(0xffffff, 0.8, 10, Math.PI / 6, 0.3);
+    centerSpot.position.set(0, 4.8, -3);
+    centerSpot.target.position.set(0, 2.5, -5);
+    scene.add(centerSpot);
+    scene.add(centerSpot.target);
+
+    // Floor marker
+    const ring = new THREE.Mesh(
+      new THREE.RingGeometry(0.3, 0.5, 32),
+      new THREE.MeshBasicMaterial({ color: 0x333333, transparent: true, opacity: 0.5, side: THREE.DoubleSide })
+    );
+    ring.rotation.x = -Math.PI / 2;
+    ring.position.set(0, 0.01, 4);
+    scene.add(ring);
+
+    // Animation
+    const clock = new THREE.Clock();
+    const SPEED = 5;
+    const DAMPING = 8;
+
+    // Collision boundaries
+    const bounds = { minX: -6.5, maxX: 6.5, minZ: -4.5, maxZ: 9.5 };
+
+    function animate() {
+      requestAnimationFrame(animate);
+      const delta = clock.getDelta();
+
+      if (controls.isLocked) {
+        // Damping
+        velocity.x -= velocity.x * DAMPING * delta;
+        velocity.z -= velocity.z * DAMPING * delta;
+
+        direction.z = Number(keys.forward) - Number(keys.backward);
+        direction.x = Number(keys.right) - Number(keys.left);
+        direction.normalize();
+
+        if (keys.forward || keys.backward) velocity.z -= direction.z * SPEED * delta;
+        if (keys.left || keys.right) velocity.x -= direction.x * SPEED * delta;
+
+        controls.moveRight(-velocity.x * delta);
+        controls.moveForward(-velocity.z * delta);
+
+        // Clamp position
+        camera.position.x = Math.max(bounds.minX, Math.min(bounds.maxX, camera.position.x));
+        camera.position.z = Math.max(bounds.minZ, Math.min(bounds.maxZ, camera.position.z));
+        camera.position.y = 1.6;
+      }
+
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    // Resize
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+  </script>
+
+  <script>
+    // Audio control (global scope for onclick)
+    let audio = null;
+    let isPlaying = false;
+    function toggleAudio() {
+      const btn = document.getElementById('audio-btn');
+      if (!audio) {
+        audio = new Audio('https://upload.wikimedia.org/wikipedia/commons/4/44/Etherwave_Theremin_middle_range.ogg');
+        audio.loop = true;
+      }
+      if (isPlaying) {
+        audio.pause();
+        btn.innerHTML = '&#9654; Play Theremin Audio';
+        isPlaying = false;
+      } else {
+        audio.play().catch(e => console.log('Audio play failed:', e));
+        btn.innerHTML = '&#9646;&#9646; Pause Audio';
+        isPlaying = true;
+      }
+    }
+  </script>
+</body>
+</html>

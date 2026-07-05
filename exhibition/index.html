@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Waves, Particles, and Sound</title>
+  <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Helvetica Neue', Arial, sans-serif; overflow: hidden; background: #000; }
+
+    /* ---------- Start overlay ---------- */
+    #instructions {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.93); z-index: 200;
+      display: flex; align-items: center; justify-content: center; flex-direction: column;
+    }
+    #instructions h1 { color: #50c8ff; font-size: 32px; font-weight: 300; letter-spacing: 5px; margin-bottom: 8px; text-align: center; }
+    #instructions h2 { color: #999; font-size: 14px; font-weight: 300; letter-spacing: 2px; margin-bottom: 26px; }
+    #instructions .tagline { color: #666; font-size: 13px; font-style: italic; margin-bottom: 36px; max-width: 460px; text-align: center; line-height: 1.6; }
+    #instructions .start-btn {
+      background: #50c8ff; color: #000; border: none; padding: 14px 44px;
+      font-size: 15px; border-radius: 8px; cursor: pointer; font-weight: 600; letter-spacing: 1px; font-family: inherit;
+    }
+    #instructions .start-btn:hover { background: #7ad6ff; }
+    #instructions .controls-grid {
+      margin-top: 34px; display: grid; grid-template-columns: auto auto; gap: 6px 18px;
+      color: #555; font-size: 12px;
+    }
+    #instructions .controls-grid b { color: #888; font-weight: 600; }
+    #instructions.hidden { display: none; }
+
+    /* ---------- Title bar ---------- */
+    #title-bar {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 99;
+      background: linear-gradient(180deg, rgba(0,0,0,0.85) 0%, transparent 100%);
+      padding: 14px 20px 26px; pointer-events: none;
+    }
+    #title-bar h1 { font-size: 15px; color: #50c8ff; letter-spacing: 3px; font-weight: 300; }
+    #title-bar p { font-size: 12px; color: #999; margin-top: 3px; }
+
+    /* ---------- Nav sidebar ---------- */
+    #nav-toggle {
+      position: fixed; top: 14px; right: 14px; z-index: 101;
+      background: rgba(0,0,0,0.8); color: #50c8ff; border: 1px solid rgba(80,200,255,0.5);
+      padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 12px;
+      font-family: inherit; letter-spacing: 1px;
+    }
+    #nav-toggle:hover { background: rgba(80,200,255,0.15); }
+    #nav-panel {
+      position: fixed; top: 0; right: 0; width: 300px; height: 100vh;
+      background: rgba(5,5,8,0.96); color: #fff; z-index: 100;
+      transform: translateX(100%); transition: transform 0.3s ease;
+      overflow-y: auto; padding: 54px 16px 20px;
+    }
+    #nav-panel.open { transform: translateX(0); }
+    #nav-panel h2 { font-size: 13px; color: #50c8ff; letter-spacing: 2px; margin-bottom: 14px; text-transform: uppercase; }
+    .nav-item {
+      display: block; width: 100%; text-align: left;
+      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+      color: #ccc; padding: 9px 12px; margin-bottom: 5px; border-radius: 6px;
+      cursor: pointer; font-size: 12px; line-height: 1.4; transition: all 0.15s; font-family: inherit;
+    }
+    .nav-item:hover { background: rgba(80,200,255,0.12); color: #fff; border-color: rgba(80,200,255,0.6); }
+    .nav-item.active { background: rgba(80,200,255,0.18); border-color: #50c8ff; color: #fff; }
+    .nav-item .nav-num { color: #50c8ff; font-weight: 700; margin-right: 6px; }
+    .nav-item .nav-date { color: #666; font-size: 10px; display: block; margin-top: 2px; }
+
+    /* ---------- Prev / Next buttons ---------- */
+    #step-buttons {
+      position: fixed; right: 16px; top: 50%; transform: translateY(-50%);
+      display: flex; flex-direction: column; gap: 10px; z-index: 97;
+    }
+    .step-btn {
+      background: rgba(0,0,0,0.75); color: #ddd; border: 1px solid rgba(255,255,255,0.25);
+      width: 110px; padding: 10px 0; border-radius: 8px; cursor: pointer;
+      font-size: 12px; font-family: inherit; letter-spacing: 1px;
+    }
+    .step-btn:hover { border-color: #50c8ff; color: #50c8ff; }
+
+    /* ---------- Info panel ---------- */
+    #info-panel {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 98;
+      background: linear-gradient(0deg, rgba(0,0,0,0.96) 0%, rgba(0,0,0,0.88) 85%, transparent 100%);
+      padding: 22px 24px 34px; transform: translateY(105%);
+      transition: transform 0.35s ease; max-height: 46vh; overflow-y: auto;
+    }
+    #info-panel.visible { transform: translateY(0); }
+    #panel-collapse {
+      position: absolute; top: 8px; right: 14px; background: none; border: none;
+      color: #666; font-size: 16px; cursor: pointer; font-family: inherit;
+    }
+    #panel-collapse:hover { color: #fff; }
+    #info-panel .station-header {
+      display: flex; justify-content: space-between; align-items: baseline;
+      margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.12); padding-bottom: 8px; padding-right: 30px;
+    }
+    #info-panel .station-name { font-size: 18px; color: #fff; font-weight: 600; }
+    #info-panel .station-date { font-size: 13px; color: #888; }
+    #info-panel .panel-text { font-size: 13px; color: #ccc; line-height: 1.75; max-width: 850px; }
+    #info-panel .panel-text em { color: #eee; }
+    .media-row { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+    .media-btn {
+      background: rgba(80,200,255,0.12); color: #50c8ff; border: 1px solid rgba(80,200,255,0.35);
+      padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 12px;
+      font-family: inherit; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;
+    }
+    .media-btn:hover { background: rgba(80,200,255,0.25); }
+    .media-btn.warm { color: #ffa070; border-color: rgba(255,150,90,0.4); background: rgba(255,150,90,0.1); }
+    .media-btn.warm:hover { background: rgba(255,150,90,0.22); }
+    .media-btn.disabled {
+      color: #555; border-color: rgba(255,255,255,0.12); background: rgba(255,255,255,0.03); cursor: default;
+    }
+
+    /* ---------- Read More: letter from the curator ---------- */
+    #letter-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.78); z-index: 300;
+      display: none; align-items: flex-start; justify-content: center;
+      overflow-y: auto; padding: 42px 16px;
+    }
+    #letter-overlay.visible { display: flex; }
+    #letter {
+      background: #f5eeda; color: #2b2416; max-width: 700px; width: 100%;
+      font-family: Georgia, 'Times New Roman', serif;
+      padding: 46px 54px 40px; border-radius: 2px; position: relative;
+      box-shadow: 0 14px 70px rgba(0,0,0,0.85);
+      background-image: linear-gradient(180deg, rgba(180,150,90,0.08) 0%, transparent 120px);
+    }
+    #letter-close {
+      position: absolute; top: 12px; right: 16px; background: none; border: none;
+      color: #8a7a58; font-size: 22px; cursor: pointer; font-family: inherit;
+    }
+    #letter-close:hover { color: #2b2416; }
+    #letter .letter-station { font-size: 12px; letter-spacing: 3px; text-transform: uppercase; color: #8a7a58; margin-bottom: 6px; }
+    #letter h2 { font-size: 26px; font-weight: 400; margin-bottom: 4px; font-style: italic; }
+    #letter .letter-date { font-size: 13px; color: #8a7a58; margin-bottom: 26px; padding-bottom: 14px; border-bottom: 1px solid rgba(138,122,88,0.35); }
+    #letter .salutation { font-style: italic; margin-bottom: 18px; }
+    #letter h3 { font-size: 13px; letter-spacing: 2.5px; text-transform: uppercase; color: #7a6234; margin: 22px 0 8px; }
+    #letter p { font-size: 15px; line-height: 1.85; margin-bottom: 12px; }
+    #letter em { color: #4a3a1a; }
+    #letter .signoff { margin-top: 28px; font-style: italic; text-align: right; color: #5a4a2a; }
+
+    /* ---------- HUD ---------- */
+    #hud {
+      position: fixed; bottom: 6px; left: 50%; transform: translateX(-50%);
+      color: #575757; font-size: 11px; z-index: 96; pointer-events: none; letter-spacing: 0.5px;
+      text-shadow: 0 1px 3px #000;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ==================== START OVERLAY ==================== -->
+<div id="instructions">
+  <h1>WAVES, PARTICLES, AND SOUND</h1>
+  <h2>A VIRTUAL EXHIBITION</h2>
+  <p class="tagline">Ten episodes, 1863&ndash;2023, in which developments in physics<br>
+     altered the materials, methods, or meaning of Western music.<br>
+     The works are arranged chronologically in a circular gallery around a single door.</p>
+  <button class="start-btn" onclick="enterExhibition()">Enter Exhibition</button>
+  <div class="controls-grid">
+    <b>W A S D</b><span>walk</span>
+    <b>Mouse</b><span>look around (click floor to capture)</span>
+    <b>N / B</b><span>next / previous station</span>
+    <b>Space</b><span>play or pause this station's music</span>
+    <b>V</b><span>play or pause this station's video</span>
+    <b>R</b><span>read more &mdash; a letter about the work</span>
+    <b>Esc</b><span>free the mouse (to use menus)</span>
+  </div>
+</div>
+
+<!-- ==================== UI ==================== -->
+<div id="title-bar">
+  <h1>WAVES, PARTICLES, AND SOUND</h1>
+  <p id="current-station-label">The Rotunda Center</p>
+</div>
+
+<button id="nav-toggle" onclick="toggleNav()">MAP</button>
+<div id="nav-panel"><h2>Exhibition Map</h2><div id="nav-items"></div></div>
+
+<div id="step-buttons">
+  <button class="step-btn" onclick="stepStation(1)">Next &#9654;</button>
+  <button class="step-btn" onclick="stepStation(-1)">&#9664; Back</button>
+  <button class="step-btn" id="btn-letter" onclick="openLetter()">&#9993; Read More</button>
+</div>
+
+<div id="info-panel">
+  <button id="panel-collapse" onclick="collapsePanel()" title="Hide panel">&#215;</button>
+  <div class="station-header">
+    <span class="station-name" id="panel-title"></span>
+    <span class="station-date" id="panel-date"></span>
+  </div>
+  <div class="panel-text" id="panel-text"></div>
+  <div class="media-row" id="panel-media"></div>
+</div>
+
+<!-- ==================== READ MORE: LETTER FROM THE CURATOR ==================== -->
+<div id="letter-overlay" onclick="if (event.target === this) closeLetter()">
+  <div id="letter">
+    <button id="letter-close" onclick="closeLetter()" title="Close">&#215;</button>
+    <div class="letter-station" id="letter-station"></div>
+    <h2 id="letter-title"></h2>
+    <div class="letter-date" id="letter-date"></div>
+    <p class="salutation">Dear visitor,</p>
+    <div id="letter-body"></div>
+    <p class="signoff">&mdash; The Curator</p>
+  </div>
+</div>
+
+<div id="hud">W A S D move &nbsp;&bull;&nbsp; mouse look &nbsp;&bull;&nbsp; N next / B back &nbsp;&bull;&nbsp; SPACE music &nbsp;&bull;&nbsp; V video &nbsp;&bull;&nbsp; R read more &nbsp;&bull;&nbsp; ESC cursor</div>
+
+<!-- ==================== SCENE ==================== -->
+<a-scene fog="type: exponential; color: #080808; density: 0.012"
+         renderer="antialias: true; colorManagement: true; anisotropy: 16"
+         vr-mode-ui="enabled: false"
+         loading-screen="backgroundColor: #000; dotsColor: #50c8ff">
+
+  <a-assets id="asset-store" timeout="3000"></a-assets>
+
+  <!-- Camera rig: starts at the center of the rotunda, facing the Great Door -->
+  <a-entity id="rig" position="0 0 0">
+    <a-camera id="cam" look-controls="pointerLockEnabled: true" wasd-controls="acceleration: 25" position="0 1.6 0"></a-camera>
+  </a-entity>
+
+  <!-- ==================== ROTUNDA SHELL ==================== -->
+  <!-- Station walls sit at radius 25; the visitor viewing ring is radius 16 -->
+  <a-circle position="0 0 0" rotation="-90 0 0" radius="28" material="color: #0e0e0e; roughness: 0.85"></a-circle>
+  <a-circle position="0 9 0" rotation="90 0 0" radius="28" material="color: #060606; roughness: 1"></a-circle>
+  <a-cylinder position="0 4.5 0" radius="27" height="9" open-ended="true" material="color: #0a0a0a; roughness: 0.95; side: double"></a-cylinder>
+
+  <!-- Timeline ring floating above the circle of dates -->
+  <a-torus position="0 7.5 0" rotation="-90 0 0" radius="24.6" radius-tubular="0.02" segments-tubular="88" material="color: #3a4550; opacity: 0.55"></a-torus>
+
+  <!-- Visitor path ring on the floor -->
+  <a-ring position="0 0.01 0" rotation="-90 0 0" radius-inner="15.9" radius-outer="16.05" material="color: #2a2a2a; opacity: 0.8"></a-ring>
+
+  <!-- ==================== CENTER DAIS ==================== -->
+  <a-circle position="0 0.02 0" rotation="-90 0 0" radius="3.2" material="color: #1a1208; roughness: 0.7"></a-circle>
+  <a-ring position="0 0.03 0" rotation="-90 0 0" radius-inner="3.2" radius-outer="3.34" material="color: #b08850; opacity: 0.55"></a-ring>
+  <a-text value="WAVES, PARTICLES, AND SOUND" position="0 0.05 -1.4" rotation="-90 0 0" color="#e6c98a" width="5" anchor="center" align="center"></a-text>
+
+  <!-- Oculus -->
+  <a-circle position="0 8.98 0" rotation="90 0 0" radius="2.6" material="color: #101826"></a-circle>
+  <a-ring position="0 8.96 0" rotation="90 0 0" radius-inner="2.6" radius-outer="2.85" material="color: #50c8ff; opacity: 0.25"></a-ring>
+
+  <!-- House lights -->
+  <a-light type="point" position="0 7.6 0" intensity="0.55" color="#ffe3b0" distance="26" decay="2"></a-light>
+  <a-light type="ambient" color="#161616" intensity="0.4"></a-light>
+
+  <!-- ==================== THE GREAT DOOR (slot 0: beginning & end) ==================== -->
+  <a-entity id="great-door">
+    <!-- backdrop -->
+    <a-plane position="0 4.5 -25.45" width="14.2" height="9" material="color: #0c0a07; roughness: 0.95"></a-plane>
+    <!-- columns -->
+    <a-box position="-3 3.75 -24.8" width="0.55" height="7.5" depth="0.55" material="color: #241b10; roughness: 0.5; metalness: 0.25"></a-box>
+    <a-box position="3 3.75 -24.8" width="0.55" height="7.5" depth="0.55" material="color: #241b10; roughness: 0.5; metalness: 0.25"></a-box>
+    <!-- door leaves -->
+    <a-box position="-1.15 2.6 -25.1" width="2.24" height="5.2" depth="0.14" material="color: #3a2a16; metalness: 0.55; roughness: 0.35"></a-box>
+    <a-box position="1.15 2.6 -25.1" width="2.24" height="5.2" depth="0.14" material="color: #3a2a16; metalness: 0.55; roughness: 0.35"></a-box>
+    <!-- raised panels on the leaves -->
+    <a-plane position="-1.15 2.6 -25.02" width="1.7" height="4.6" material="color: #4a3620; roughness: 0.4; metalness: 0.4"></a-plane>
+    <a-plane position="1.15 2.6 -25.02" width="1.7" height="4.6" material="color: #4a3620; roughness: 0.4; metalness: 0.4"></a-plane>
+    <!-- glowing seam of light between the doors -->
+    <a-plane position="0 2.6 -25" width="0.07" height="5.2" material="color: #ffd9a0; opacity: 0.95"></a-plane>
+    <!-- golden arch -->
+    <a-ring position="0 5.2 -25.02" radius-inner="2.32" radius-outer="2.78" theta-start="0" theta-length="180" material="color: #b08850; metalness: 0.6; roughness: 0.3"></a-ring>
+    <a-circle position="0 5.2 -25.18" radius="2.32" theta-start="0" theta-length="180" material="color: #16100a"></a-circle>
+    <a-text value="MDCCCXCIV -- MMXXIII" position="0 6 -25.1" color="#b08850" width="4.2" anchor="center" align="center"></a-text>
+    <!-- handles -->
+    <a-sphere position="-0.3 2.5 -24.97" radius="0.07" material="color: #c8a060; metalness: 0.7; roughness: 0.3"></a-sphere>
+    <a-sphere position="0.3 2.5 -24.97" radius="0.07" material="color: #c8a060; metalness: 0.7; roughness: 0.3"></a-sphere>
+    <!-- step platform -->
+    <a-box position="0 0.08 -24" width="6.6" height="0.16" depth="1.8" material="color: #16120c; roughness: 0.8"></a-box>
+    <!-- title above the arch -->
+    <a-text value="WAVES, PARTICLES, AND SOUND" position="0 8.2 -25.1" color="#e6c98a" width="9" anchor="center" align="center"></a-text>
+    <!-- warm light -->
+    <a-light type="point" position="0 5 -21.5" intensity="0.8" color="#ffc890" distance="16" decay="2"></a-light>
+
+    <!-- intro panel (right of the door, beside Station 1 / 1894) -->
+    <a-plane position="4.95 3 -24.9" width="3.8" height="4.6" material="color: #100e0a; roughness: 0.9"></a-plane>
+    <a-text value="INTRODUCTION" position="4.95 4.9 -24.85" color="#e6c98a" width="2.6" anchor="center" align="center"></a-text>
+    <a-text value="This exhibition examines ten episodes,\nfrom 1863 to 2023, in which developments\nin physics altered the materials,\nmethods, or meaning of Western music.\n\nThe works are arranged chronologically\naround the room, beginning with Debussy\n(1894) to the right of this door and\nending with Miranda (2023) to its left.\n\nThe connections are not all of one kind,\nand each station names its own. Some are\ndirect applications of physics to\ncomposition; some are instruments built\nfrom physical principles; others are\nparallel responses to a changed\ndescription of nature.\n\nEach station presents the physics, the\nmusic, and the relation between them.\nA fuller discussion of every work is\navailable through Read More."
+            position="4.95 4.55 -24.85" baseline="top" color="#b5b5b5" width="3.3" anchor="center" align="left" wrap-count="42" line-height="62"></a-text>
+
+    <!-- epilogue panel (left of the door, beside Station 10 / 2023) -->
+    <a-plane position="-4.95 3 -24.9" width="3.8" height="4.6" material="color: #100e0a; roughness: 0.9"></a-plane>
+    <a-text value="EPILOGUE" position="-4.95 4.9 -24.85" color="#e6c98a" width="2.6" anchor="center" align="center"></a-text>
+    <a-text value="The sequence ends where it began.\n\nAcross the ten stations a pattern\nrecurs: a development in physics -- in\nacoustics, electromagnetism, statistical\nmechanics, or quantum theory -- precedes\nand conditions a change in compositional\npractice.\n\nThe pattern has not closed. The link\nbetween physics and music continues to\nevolve, and it remains one worth\nlistening to."
+            position="-4.95 4.55 -24.85" baseline="top" color="#b5b5b5" width="3.3" anchor="center" align="left" wrap-count="42" line-height="62"></a-text>
+    <a-text value="Columbia University -- Music Humanities -- Summer A 2026" position="-4.95 0.85 -24.85" color="#555" width="2.4" anchor="center" align="center"></a-text>
+
+    <!-- floor guidance toward Station 1 -->
+    <a-text value="THE EXHIBITION BEGINS HERE -- 1894" position="3.6 0.02 -17.5" rotation="-90 -17 0" color="#8a7550" width="3" anchor="center" align="center"></a-text>
+  </a-entity>
+
+  <!-- Stations 1-10 are generated by script, arranged in a circle -->
+</a-scene>
+
+<!-- ==================== DATA + LOGIC ==================== -->
+<script>
+/* ============================================================
+   STATION DATA — single source of truth.
+   Order is strictly chronological by musical work.
+   Asset slots (drop files into ./assets/sNN/ with these names):
+     s01/s01_physics.jpg  s01/s01_center.jpg  s01/s01_music.jpg
+     s01/s01_audio.mp3    s01/s01_video.mp4   (video is optional;
+     if present it replaces the center image and V plays it)
+   ============================================================ */
+const stations = [
+  { id: 0, key: 'entrance', name: 'The Rotunda Center', date: '', color: '#50c8ff' },
+
+  { id: 1, key: 's01', name: 'The Anatomy of a Single Tone', year: '1894', date: '1863 / 1894', color: '#d4a050', wallBg: '#151510',
+    phLabel: 'Helmholtz resonators', muLabel: 'Claude Debussy, c.1908', ctLabel: 'The overtone series',
+    wallPhysics: 'In 1863, Helmholtz proved every\nmusical tone is a composite: a\nfundamental pitch plus a ladder of\novertones. The recipe of overtones\ngives each instrument its color --\nits timbre. He revealed the hidden\narchitecture inside every note.',
+    wallConnection: 'THE CONNECTION\n\nHelmholtz showed timbre arises from\nthe overtone series. Debussy, who\nknew this work, composed with that\nstructure -- hearing chords as\ntextures rather than functions.',
+    wallMusic: 'In 1894, Debussy premiered Prelude\na l\'apres-midi d\'un faune, treating\nchords as pure sonorities -- blocks\nof color valued for how they sound,\nnot where they lead. Luminous\ntextures shimmer and dissolve\nrather than march through harmony.',
+    physics: 'In 1863, the German physicist Hermann von Helmholtz published <em>On the Sensations of Tone</em>, proving that every musical tone is a composite -- a fundamental pitch plus a ladder of overtones. The recipe of overtones gives each instrument its unique color, its <em>timbre</em>. Using tuning forks and glass resonators, Helmholtz revealed the hidden architecture inside every note.',
+    music: 'In 1894, Claude Debussy premiered <em>Prelude a l\'apres-midi d\'un faune</em>. The piece opens with a sinuous flute solo floating free of any clear key. Debussy layers translucent washes that shimmer and dissolve rather than march through conventional harmony. He treats chords as pure <em>sonorities</em> -- blocks of color valued for how they sound, not where they lead.',
+    connection: 'Helmholtz showed that timbre arises from the overtone series. Debussy, who studied acoustics at the Paris Conservatoire and knew Helmholtz\'s work, composed with that structure in mind -- hearing chords as textures rather than functions. The connection is <em>informed influence</em>.',
+    instruction: 'Press SPACE (or the audio button) to hear the opening flute solo.',
+    why: 'Boulez dated the beginning of modern music to the opening flute solo of the <em>Faun</em>. The exhibition opens here because the work is the clearest documented case of scientific knowledge altering compositional practice without appearing explicitly in the score: Debussy encountered acoustics during his Conservatoire training and subsequently treated sonority -- color, texture, resonance -- as primary material rather than as harmonic grammar. The station also establishes the exhibition\'s structural through-line. The overtone series Helmholtz measured recurs twice in the circle: as the resonant frequencies of Lucier\'s room (Station 8) and as the spectrum Grisey orchestrates (Station 9). A single acoustical discovery thus spans three generations of compositional technique.',
+    ytMusic: 'https://www.youtube.com/watch?v=-YazhxBA7oo', ytPhysics: 'https://www.youtube.com/watch?v=foI6yHE2CGM' },
+
+  { id: 2, key: 's02', name: 'Sound in Motion', year: '1908', date: '1842 / 1908', color: '#4080c0', wallBg: '#0a0e18',
+    phLabel: 'Doppler wave diagram', muLabel: 'Charles Ives', ctLabel: 'Three groups in space',
+    wallPhysics: 'In 1842, Doppler proposed that\nwave frequency changes when source\nand observer move relative to each\nother. An ambulance siren rises as\nit approaches and drops as it\nrecedes -- waves compressed in\nfront, stretched behind.',
+    wallConnection: 'THE CONNECTION\n\nIves\' father positioned marching\nbands on opposite sides of town --\nDoppler\'s principle in action. Ives\ncomposed from the listener\'s moving\nbody: music where your position\nin space shapes what you hear.',
+    wallMusic: 'Ives\' The Unanswered Question\n(1908): three groups placed apart\nin space -- offstage strings, a solo\ntrumpet, a woodwind quartet -- each\nin its own musical world. The three\nlayers overlap but never converge.',
+    physics: 'In 1842, Christian Doppler proposed that wave frequency changes when source and observer move relative to each other. An ambulance siren rises as it approaches and drops as it recedes -- the waves compress in front of the moving source and stretch behind it. It was first tested with trumpeters on a moving train in 1845.',
+    music: 'Charles Ives grew up with a father who positioned marching bands on opposite sides of town, each playing different music. From this childhood he composed <em>The Unanswered Question</em> (1908): three groups placed apart in space -- offstage strings, a solo trumpet posing "the perennial question," a woodwind quartet answering with increasing frenzy -- each in its own musical world, overlapping but never converging.',
+    connection: 'Ives\' father\'s experiments were Doppler\'s principle in action: sound changes with spatial motion. Ives composed from the listener\'s moving body, creating music where spatial position shapes perception. Professor Susser drew this exact connection in class. The link is <em>experiential</em>.',
+    instruction: 'Press SPACE and notice the three independent layers: strings, trumpet, woodwinds.',
+    why: 'The pairing originates in this course: the relation between the Doppler effect and Ives\'s spatial practice was drawn in lecture, and the station develops that observation. Beyond the course connection, Ives is the first composer in the sequence to treat spatial position as a compositional parameter. The offstage strings of <em>The Unanswered Question</em> anticipate a century of spatialized music, from antiphonal seating arrangements to electroacoustic diffusion -- and, not incidentally, the navigable virtual space of this exhibition. The work\'s program, a question posed and never satisfactorily answered, also states in miniature the question the exhibition examines: what kind of answer music gives to a changed description of nature.',
+    ytMusic: 'https://www.youtube.com/watch?v=vXD4tIp59L0', ytPhysics: 'https://www.youtube.com/watch?v=h4OnBYrbCjY' },
+
+  { id: 3, key: 's03', name: 'Simultaneous Perspectives', year: '1913', date: '1905 / 1913', color: '#e05030', wallBg: '#181008',
+    phLabel: 'Einstein / Picasso\'s Guitar', muLabel: 'Stravinsky, Rite of Spring', ctLabel: 'Cubist multiple perspectives',
+    wallPhysics: 'In 1905, Einstein proved there is\nno absolute frame of reference --\ntime itself is relative. In the same\ndecade, Picasso shattered the single\nviewpoint in painting. Reality\ndepended on where you stood.',
+    wallConnection: 'THE CONNECTION\n\nNo direct influence connects them.\nBut within one decade, physics, art,\nand music each dismantled the idea\nof a single, stable perspective.\nThe connection is synchronous\nrupture.',
+    wallMusic: 'Stravinsky\'s Rite of Spring (1913)\nstacked clashing rhythms, layered\nconflicting keys, drove pounding\nasymmetric accents. Multiple musical\n\'realities\' coexist at once. Its\npremiere caused a riot.',
+    physics: 'In 1905, Einstein published Special Relativity: there is no single, absolute frame of reference. Time itself is relative; simultaneity is an illusion. In the same decade, Picasso shattered the single viewpoint in painting -- his 1912 <em>Guitar</em> shows an object from multiple angles at once. Reality depended on where you stood.',
+    music: 'On May 29, 1913, Stravinsky\'s <em>The Rite of Spring</em> caused a riot in Paris. He stacked rhythms that refuse to align (<em>polyrhythm</em>), layered clashing keys (<em>polytonality</em>), and drove pounding asymmetric accents. Multiple musical "realities" coexist simultaneously, each with its own pulse and tonal center.',
+    connection: 'Einstein, Picasso, and Stravinsky never collaborated. But within one decade, physics, visual art, and music each dismantled the idea of a single, stable perspective. Relativity denied absolute time; Cubism denied a single viewpoint; <em>The Rite</em> denied a single meter and key. The connection is <em>synchronous rupture</em>.',
+    instruction: 'Press SPACE and try to count along -- you will find more than one pulse.',
+    why: 'Not every pairing in the exhibition claims direct influence, and this station defines the alternative. There is no documented link between Einstein and Stravinsky; Picasso\'s <em>Guitar</em> occupies the center of the wall as a contemporaneous parallel, not as evidence of exchange. The station instead documents synchrony: within roughly one decade, physics, painting, and music each abandoned the premise of a single privileged frame of reference. Its inclusion serves a methodological purpose -- it marks the boundary between demonstrable influence and cultural simultaneity, and keeps the exhibition\'s stronger claims credible. The premiere\'s notoriety indicates how audible such a conceptual shift was to its first audiences.',
+    ytMusic: 'https://www.youtube.com/watch?v=EkwqPJZe8ms', ytPhysics: 'https://www.youtube.com/watch?v=ev9zrt__lec' },
+
+  { id: 4, key: 's04', name: 'Music from Thin Air', year: '1920', date: '1920', color: '#9060d0', wallBg: '#0f0a18',
+    phLabel: 'Leon Theremin, c.1928', muLabel: 'Clara Rockmore, c.1930s', ctLabel: 'Electromagnetic field',
+    wallPhysics: 'In 1920, physicist Leon Theremin\nfound that moving his hand near an\nantenna changed audible pitch. His\nbody acted as a variable capacitor\nin the circuit. The first instrument\nyou play without touching -- made\nof electromagnetic fields.',
+    wallConnection: 'THE CONNECTION\n\nThe theremin IS an electromagnetic\ninstrument. The performer\'s body\nbecomes part of the circuit. Every\ngesture changes the field; every\nchange becomes pitch. Physics made\nmusical, with no intermediary.',
+    wallMusic: 'Clara Rockmore transferred her\nviolin virtuosity to the theremin,\ncoaxing a tone part cello, part\nsoprano voice. Her right hand\nsculpted pitch in the air; her left\ncontrolled volume -- proof that an\nelectromagnetic field could sing.',
+    physics: 'In 1920, Russian physicist Leon Theremin was researching high-frequency circuits when he noticed that moving his hand near an antenna changed the audible pitch. His body acted as a variable capacitor -- <em>heterodyne oscillation</em> produced an audible difference tone from two radio-frequency signals. He had stumbled upon the first instrument you play without touching.',
+    music: 'Clara Rockmore, a Lithuanian-born violin prodigy, became the theremin\'s undisputed virtuoso. She coaxed from it a tone part cello, part soprano voice -- a continuous, vibrato-rich legato unlike anything else in music. Her right hand sculpted pitch in the air; her left controlled volume. Proof that an electromagnetic field could sing.',
+    connection: 'The theremin does not <em>use</em> electromagnetic principles as metaphor -- it <em>is</em> an electromagnetic instrument. The performer\'s body becomes a variable capacitor in a circuit. Leon Theremin was a physicist first and an instrument builder second. The connection is <em>direct and instrumental</em>.',
+    instruction: 'Press SPACE to hear Clara Rockmore perform "The Swan."',
+    why: 'The station has a biographical origin: an encounter with a theremin exhibited at the Metropolitan Museum of Art, which suggested the premise of this exhibition. Its justification is broader. The theremin is the first performable instrument without a vibrating body; its sound is produced entirely by the interaction of a performer with an electromagnetic field, making it the most literal case in the exhibition of physics functioning as an instrument. Historically it stands at the head of the electronic lineage that runs through the synthesizer to the present. Rockmore\'s performance practice is included to document that the instrument sustained serious interpretive standards from its first generation.',
+    ytMusic: 'https://www.youtube.com/watch?v=pSzTPGlNa5U', ytPhysics: 'https://www.youtube.com/watch?v=-QgTF8p-284' },
+
+  { id: 5, key: 's05', name: 'The Sound of Nothing', year: '1952', date: '1927 / 1952', color: '#e8e8e8', wallBg: '#141414',
+    phLabel: 'Quantum vacuum fluctuations', muLabel: 'John Cage, 4\'33"', ctLabel: 'The anechoic chamber',
+    wallPhysics: 'Quantum mechanics revealed that\nperfect emptiness does not exist.\nEven in a vacuum, virtual particles\nflicker in and out of existence.\n\'Nothing\' is not nothing. Empty\nspace has structure, energy,\nand fluctuation.',
+    wallConnection: 'THE CONNECTION\n\nPhysicist Donald Spector argued that\n4\'33" represents the quantum vacuum:\nthe absence of deliberate signal\nreveals that \'empty\' space is full\nof activity. Physics and music both\ndiscovered the impossibility\nof nothing.',
+    wallMusic: 'In 1951, Cage sat in Harvard\'s\nanechoic chamber expecting silence --\nand heard his own nervous system\nand blood. In 1952 he premiered\n4\'33": the performer plays nothing.\nThe \'music\' is whatever ambient\nsound occurs. Silence is impossible.',
+    physics: 'Quantum mechanics revealed that perfect emptiness does not exist. Even in a vacuum, virtual particles flicker into existence and annihilate on timescales too brief to observe, but their effects are measurable -- the <em>Casimir effect</em> pushes two plates together using nothing but vacuum fluctuations. The quantum vacuum <em>seethes</em>. "Nothing" is not nothing.',
+    music: 'In 1951, Cage visited Harvard\'s anechoic chamber expecting silence. Instead he heard two sounds: his nervous system and his blood circulating. Silence was unreachable. In 1952 he premiered <em>4\'33"</em>: three movements during which the performer plays nothing. The "music" is whatever ambient sounds occur -- and every performance is unique. In 2020 the Berlin Philharmonic performed it to an empty, locked-down hall.',
+    connection: 'Physicist Donald Spector published a paper -- "John Cage Adores a Vacuum" -- arguing that <em>4\'33"</em> is the auditory analogue of the quantum vacuum: in both cases, the absence of deliberate signal reveals that "empty" space is full of activity. The connection is <em>structural parallel</em>.',
+    instruction: 'Stand still for thirty seconds. Listen to your own room. That is the piece.',
+    why: 'This station occupies the conceptual center of the exhibition. The question it poses -- whether silence exists -- receives parallel negative answers from quantum field theory and from Cage\'s experience in the anechoic chamber, and the parallel has been argued formally in a published paper by the physicist Donald Spector. The pairing is a structural analogy rather than an influence, and is labeled as such. One curatorial decision follows from the work itself: the station provides no recording, since the composition consists of the ambient sound present at each performance. Cage\'s redefinition of the musical work -- from organized sound to framed attention -- conditions every station that follows.',
+    ytMusic: 'https://www.youtube.com/watch?v=AWVUp12XPpU', ytPhysics: 'https://www.youtube.com/watch?v=OgJj49ws478',
+    ytExtra: { label: 'Read the Physics Paper', url: 'https://archive.bridgesmathart.org/2013/bridges2013-325.pdf' } },
+
+  { id: 6, key: 's06', name: 'Music by Probability', year: '1955', date: '1860s / 1955', color: '#60a080', wallBg: '#0c120e',
+    phLabel: 'Maxwell-Boltzmann distribution', muLabel: 'Xenakis, Pithoprakta score', ctLabel: 'Glissandi as particles',
+    wallPhysics: 'Maxwell and Boltzmann described\nbillions of gas molecules using\nprobability distributions. Brownian\nmotion -- the random jiggling of\nparticles -- became a visible\nsignature of statistical reality.\nOrder emerges from randomness.',
+    wallConnection: 'THE CONNECTION\n\nXenakis imported the equations\ndirectly into his method. The\norchestra becomes a gas: 46\nindependent particles whose\ncollective motion produces emergent\nform. Published in Formalized\nMusic (1971).',
+    wallMusic: 'In Pithoprakta (1955), Xenakis had\n46 string players perform\nindependent glissandi, each\ndetermined by Maxwell-Boltzmann\nequations. The result is a seething\nswarm -- the sonic equivalent of\na gas cloud.',
+    physics: 'In the 1860s, Maxwell and Boltzmann developed statistical mechanics -- describing billions of gas molecules not individually but through probability distributions. Brownian motion, the random jiggling of pollen grains buffeted by invisible molecules, became a visible signature of this statistical reality. Order emerges from randomness.',
+    music: 'Iannis Xenakis -- trained as an engineer and architect under Le Corbusier -- applied statistical mechanics directly in <em>Pithoprakta</em> (1955-56). Each of 46 string players performs an independent glissando with pitch, speed, and direction determined by Maxwell-Boltzmann equations. The result is a seething, swarming mass -- the sonic equivalent of a gas cloud.',
+    connection: 'This is <em>explicit mathematical application</em>. Xenakis imported the equations into his compositional method and published them in <em>Formalized Music</em> (1971). The orchestra becomes a gas: 46 independent particles whose collective motion produces emergent form.',
+    instruction: 'Press SPACE and hear each glissando as one particle in a cloud.',
+    why: '<em>Pithoprakta</em> is the exhibition\'s strongest case of direct mathematical transfer. Xenakis did not analogize statistical mechanics; he calculated with the Maxwell-Boltzmann distribution and documented the method in <em>Formalized Music</em>. The station represents the professional convergence the exhibition traces -- Xenakis worked simultaneously as engineer, architect, and composer -- and it establishes the precondition for the final stations: once compositional decisions can be generated from mathematical models, computation becomes a musical instrument. The title translates as "actions by means of probability." Subsequent algorithmic and stochastic composition, including the quantum-generated music of Station 10, develops from the procedure demonstrated here.',
+    ytMusic: 'https://www.youtube.com/watch?v=nvH2KYYJg-o', ytPhysics: 'https://www.youtube.com/watch?v=ZNzoTGv_XiQ' },
+
+  { id: 7, key: 's07', name: 'Sound After the Unthinkable', year: '1960', date: '1945 / 1960', color: '#b8b8b8', wallBg: '#0f0f0f',
+    phLabel: 'Hiroshima, August 6, 1945', muLabel: 'Penderecki\'s graphic score', ctLabel: 'Notation like particle tracks',
+    wallPhysics: 'On July 16, 1945, physicists\ndetonated the first nuclear weapon.\nFission -- splitting atomic nuclei --\nreleased energy equal to 21,000\ntons of TNT. Physics had produced\nthe most terrifying object in\nhuman history.',
+    wallConnection: 'THE CONNECTION\n\nThe connection is moral response.\nPenderecki used music to bear\nwitness to what nuclear physics had\nmade possible. His graphic score\nresembles particle trajectory\ndiagrams -- dense branching lines\nlike a cloud chamber.',
+    wallMusic: 'Penderecki\'s Threnody for the\nVictims of Hiroshima (1960) uses no\nmelody, no harmony -- only tone\nclusters and unearthly glissandi.\nHe invented a new graphic notation\nfor 52 strings. The sound is\na scream.',
+    physics: 'On July 16, 1945, physicists detonated the first nuclear weapon in the New Mexico desert. Nuclear fission -- splitting atomic nuclei -- released energy equivalent to 21,000 tons of TNT. Weeks later, bombs fell on Hiroshima and Nagasaki, killing over 200,000 people. Physics had produced the most terrifying object in human history.',
+    music: 'Penderecki\'s <em>Threnody for the Victims of Hiroshima</em> (1960) uses no melody and no harmony. He invented a graphic notation -- squiggles, blacked-out blocks, time-space diagrams -- to direct 52 strings in <em>tone clusters</em>, col legno strikes, and unearthly quarter-tone glissandi. The sound is a scream: a wall of anguished noise that tightens, shrieks, and fades to silence.',
+    connection: 'The connection is <em>moral response</em>. Penderecki used music to bear witness to what nuclear physics had made possible. His graphic score visually resembles particle trajectory diagrams -- dense branching lines evoking paths in a cloud chamber. The piece asks: what does music sound like after physics has destroyed a city?',
+    instruction: 'Press SPACE and close your eyes. Let the sound surround you.',
+    why: 'The other stations document what physics contributed to music; this one documents music\'s response to what physics made possible. The <em>Threnody</em> is included as the exhibition\'s necessary counterweight: an account of the century\'s physics that omitted its destructive consequences would be incomplete. The connection is one of moral response rather than technique, though a technical parallel exists -- the graphic notation Penderecki devised for the work\'s clusters and glissandi visually resembles particle-track diagrams, an accidental convergence between the notation of catastrophe and the notation of matter. Within the circle, this station marks the point at which the exhibition\'s subject acquires ethical weight.',
+    ytMusic: 'https://www.youtube.com/watch?v=HilGthRhwP8', ytPhysics: 'https://www.youtube.com/watch?v=ojkeBfOckIk' },
+
+  { id: 8, key: 's08', name: 'The Room Reveals Itself', year: '1969', date: '1969', color: '#c0a060', wallBg: '#121210',
+    phLabel: 'Standing waves in a room', muLabel: 'Alvin Lucier', ctLabel: 'Speech dissolving into tone',
+    wallPhysics: 'Every room has resonant\nfrequencies -- pitches where sound\nwaves reflect off the walls in\npatterns that reinforce themselves,\ncreating standing waves. The room\nacts as a filter. Every room has\na sonic fingerprint.',
+    wallConnection: 'THE CONNECTION\n\nThe composition IS the physics.\nNo metaphor. Lucier designed a\nprocess that physically demonstrates\nacoustic resonance. The room becomes\nthe instrument, the score, and\nthe performer.',
+    wallMusic: 'Lucier recorded himself speaking,\nplayed it back into the room,\nre-recorded, and repeated 32 times.\nHis voice dissolved into shimmering\ntones -- the room\'s resonant\nfrequencies. The room was singing.',
+    physics: 'Every enclosed space has resonant frequencies -- pitches at which sound waves reflect off walls in patterns that reinforce themselves, creating standing waves. The room acts as a filter, strengthening some frequencies and suppressing others. Every room has a sonic fingerprint.',
+    music: 'In 1969, Alvin Lucier recorded himself speaking: <em>"I am sitting in a room different from the one you are in now..."</em> He played the tape back into the room, re-recorded it, and repeated the cycle 32 times. Consonants blurred, vowels smeared, and his voice -- including his stutter -- dissolved into pure shimmering tones: the resonant frequencies of the room itself. The room was singing.',
+    connection: 'The composition <em>is</em> the physics. There is no metaphor, no translation. Each re-recording cycle strips away frequencies the room does not reinforce and amplifies those it does. The room becomes the instrument, the score, and the performer. The connection is <em>identity</em>.',
+    instruction: 'Press SPACE and listen for the moment the words become pure tone.',
+    why: 'The work is included because it is not a representation of an acoustical process but an execution of one: the connection between physics and music here is identity. The score is a set of procedural instructions; the apparatus is two tape recorders; the result is determined by the resonant frequencies of the performance space. The piece is also uniquely reproducible -- it can be realized in any room, with different results in each -- which makes it the exhibition\'s clearest demonstration that the acoustics of Station 1 apply beyond instruments. The overtone series returns here as a property of architecture, completing one of the circle\'s internal threads.',
+    ytMusic: 'https://www.youtube.com/watch?v=fAxHlLK3Oyk', ytPhysics: 'https://www.youtube.com/watch?v=JPYt10zrclQ' },
+
+  { id: 9, key: 's09', name: 'Orchestrating the Spectrogram', year: '1975', date: '1822 / 1975', color: '#30a0c0', wallBg: '#080e18',
+    phLabel: 'Fourier analysis of a trombone', muLabel: 'Grisey, Partiels', ctLabel: 'Spectrogram becomes score',
+    wallPhysics: 'In 1822, Fourier proved any sound\ncan be decomposed into a sum of\nsine waves. A spectrogram makes\nthis visible -- showing which\nfrequencies are present in a sound\nand how strong each one is.',
+    wallConnection: 'THE CONNECTION\n\nThe most direct physics-to-music\ntranslation in the exhibition.\nGrisey fed sound into a machine,\nread the data, and transcribed it\nonto orchestral staves. The ensemble\nplays a spectrogram.',
+    wallMusic: 'Grisey recorded a trombone note,\nanalyzed its spectrum at IRCAM,\nthen orchestrated each overtone:\nfundamental to trombone, 2nd partial\nto horn, 3rd to clarinet... Partiels\n(1975) is the inside of a sound\nmade audible.',
+    physics: 'In 1822, Joseph Fourier proved that any complex waveform can be decomposed into simple sine waves of different frequencies and amplitudes. Applied to sound, this means any tone -- a trombone blast, a vowel, a cymbal crash -- can be displayed as a <em>spectrogram</em>: a visual map of its frequency components.',
+    music: 'In 1975, Gerard Grisey recorded a low E on a trombone and studied its spectrogram at IRCAM. Then he <em>orchestrated the spectrogram</em>: each overtone assigned to a different instrument -- fundamental to trombone, second partial to horn, third to clarinet, upward through the ensemble. <em>Partiels</em> begins as a single trombone note and blooms into a shimmering chord that is literally the inside of that note made audible.',
+    connection: 'The most direct physics-to-music translation in the exhibition. Grisey did not interpret Fourier analysis -- he fed sound into a machine, read the data, and transcribed it onto orchestral staves. The ensemble <em>plays</em> a spectrogram. The school this founded is called <em>Spectral Music</em>. The connection is <em>direct transcription</em>.',
+    instruction: 'Press SPACE as the orchestra unfolds a single trombone note.',
+    why: '<em>Partiels</em> closes the circle the exhibition opens at Station 1: it returns to the interior structure of a single tone, now analyzed by Fourier methods at IRCAM rather than measured with resonators. The station documents the most direct transcription in the exhibition -- spectral data transferred to orchestral staves -- and its consequences: the spectral school that <em>Partiels</em> inaugurated became one of the most widely taught compositional movements of the late twentieth century. The rotunda\'s circular plan reflects this relation: the end of the sequence returns to the material of its beginning.',
+    ytMusic: 'https://www.youtube.com/watch?v=4Db_uz1a2v8', ytPhysics: 'https://www.youtube.com/watch?v=spUNpyF58BY',
+    ytExtra: { label: 'How Grisey Did It (analysis)', url: 'https://www.youtube.com/watch?v=mq74L2vVvsw' } },
+
+  { id: 10, key: 's10', name: 'Quantum Duet', year: '2023', date: '2023', color: '#c050a0', wallBg: '#0a0812',
+    phLabel: 'IBM Quantum Eagle, 127 qubits', muLabel: 'Miranda, Qubism', ctLabel: 'Bloch sphere / quantum circuit',
+    wallPhysics: 'A quantum computer uses qubits --\nbits that exist in superposition of\n0 and 1 at once. Measurement\ncollapses superposition into a\ndefinite value, and the outcome\nis fundamentally probabilistic.',
+    wallConnection: 'THE CONNECTION\n\n160 years from Helmholtz to here.\nQuantum computation generates\nmusical decisions through\nmeasurement and superposition.\nThe responding \'performer\' is a\nquantum computer. Physics is not\nmetaphor but collaborator.',
+    wallMusic: 'In Miranda\'s Qubism (2023), a\nviolinist plays a phrase and an IBM\nquantum computer responds. The\nprobabilistic output determines\npitches and rhythms. No two\nperformances are identical.\nCall-and-response meets quantum.',
+    physics: 'A quantum computer uses <em>qubits</em> -- quantum bits that exist in superposition of both 0 and 1 simultaneously. Only when you measure a qubit does it collapse to a definite value, and the outcome is fundamentally probabilistic. In 2022, IBM unveiled the Eagle processor with 127 qubits -- powerful enough for its outputs to drive creative decisions.',
+    music: 'In Eduardo Reck Miranda\'s <em>Qubism</em> (2023), a violinist plays a phrase; an IBM quantum computer processes it through a quantum circuit, and the probabilistic output of qubit measurements determines the responding phrase. No two performances are identical. The ancient form of call-and-response -- heard in this course from spirituals to jazz -- meets the newest technology on Earth.',
+    connection: 'The 160-year arc closes here. Helmholtz used tuning forks; Miranda uses qubits. In <em>Qubism</em>, quantum computation <em>generates</em> musical decisions through measurement and superposition. The responding "performer" is a quantum computer. The connection is <em>generative and direct</em>.',
+    instruction: 'Press SPACE to hear music computed by a quantum processor.',
+    why: 'The sequence ends at the present. <em>Qubism</em> is included because it inverts the relation documented in the preceding stations: physics appears here not as subject matter, method, or instrument, but as a performing partner whose responses are generated by quantum measurement. The work also continues a lineage examined throughout this course -- call and response, from the spirituals onward -- in its newest technological form. Its indeterminacy is structural: no two performances are identical, because the underlying measurements are probabilistic. The exhibition therefore closes without resolution, and the circle returns the visitor to the door at which it began.',
+    ytMusic: 'https://www.youtube.com/watch?v=5PilN5ynYv8', ytPhysics: 'https://www.youtube.com/watch?v=kmCZMLfo_ak',
+    ytExtra: { label: 'Full Album (SoundCloud)', url: 'https://soundcloud.com/51beats/sets/51bts080-eduardo-reck-miranda-qubism' } },
+
+  { id: 11, key: 'exit', name: 'The Great Door', angle: 0, date: '', color: '#e6c98a' }
+];
+
+/* ============================================================
+   CIRCULAR LAYOUT — 11 slots around the rotunda.
+   The Great Door sits at 0 deg; stations 1-10 fill the rest
+   of the circle in chronological order, returning to the door.
+   ============================================================ */
+const STEP = 360 / 11;   // degrees per slot
+const WALL_R = 25;       // radius of the station walls
+const STAND_R = 16;      // radius of the visitor viewing ring (9m from wall)
+for (const s of stations) if (s.id >= 1 && s.id <= 10) s.angle = s.id * STEP;
+
+function slotXZ(angleDeg, radius) {
+  const a = angleDeg * Math.PI / 180;
+  return { x: radius * Math.sin(a), z: -radius * Math.cos(a) };
+}
+
+/* ============================================================
+   SCENE GENERATION — builds all 10 stations + exit from data
+   ============================================================ */
+const sceneEl = document.querySelector('a-scene');
+const assetsAvailable = {};   // key -> {physics, center, music, audio, video}
+const audioPlayers = {};      // key -> Audio object
+const videoEls = {};          // key -> <video> element
+
+function el(tag, attrs) {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
+  return e;
+}
+
+/* Wooden plaques behind wall texts — sized to the rendered text once the font loads */
+const plaqueTargets = [];
+
+function addPlaque(root, textEl, zFrame, pad) {
+  const frame = el('a-plane', { width: '1', height: '1', position: `0 0 ${zFrame}`,
+    material: 'color: #4a3620; roughness: 0.5; metalness: 0.15', visible: 'false' });
+  const panel = el('a-plane', { width: '1', height: '1', position: `0 0 ${zFrame + 0.006}`,
+    material: 'color: #15100a; roughness: 0.85', visible: 'false' });
+  root.appendChild(frame); root.appendChild(panel);
+  plaqueTargets.push({ root, text: textEl, frame, panel, zFrame, pad });
+}
+
+function fitPlaques() {
+  const box = new THREE.Box3();
+  for (const t of plaqueTargets) {
+    if (!t.text.getObject3D('text')) continue;
+    box.setFromObject(t.text.object3D);
+    if (!isFinite(box.min.x) || !isFinite(box.max.x)) continue;
+    const min = t.root.object3D.worldToLocal(box.min.clone());
+    const max = t.root.object3D.worldToLocal(box.max.clone());
+    const w = Math.abs(max.x - min.x) + t.pad * 2;
+    const h = Math.abs(max.y - min.y) + t.pad * 2;
+    const cx = (max.x + min.x) / 2, cy = (max.y + min.y) / 2;
+    t.frame.setAttribute('width', (w + 0.09).toFixed(3));
+    t.frame.setAttribute('height', (h + 0.09).toFixed(3));
+    t.frame.setAttribute('position', `${cx.toFixed(3)} ${cy.toFixed(3)} ${t.zFrame}`);
+    t.panel.setAttribute('width', w.toFixed(3));
+    t.panel.setAttribute('height', h.toFixed(3));
+    t.panel.setAttribute('position', `${cx.toFixed(3)} ${cy.toFixed(3)} ${t.zFrame + 0.006}`);
+    t.frame.setAttribute('visible', 'true');
+    t.panel.setAttribute('visible', 'true');
+  }
+}
+
+function buildStation(s) {
+  // Root sits on the circle so the wall (local z -5) lands at WALL_R, facing the center
+  const p = slotXZ(s.angle, WALL_R - 5);
+  const root = el('a-entity', { id: 'station-' + s.id,
+    position: `${p.x.toFixed(3)} 0 ${p.z.toFixed(3)}`, rotation: `0 ${(-s.angle).toFixed(3)} 0` });
+
+  // Year floating above the wall — one digit-group in the ring of dates
+  root.appendChild(el('a-text', { value: s.year, position: '0 6.45 -4.9',
+    color: s.color, width: '6', 'wrap-count': '6', anchor: 'center', align: 'center', opacity: '0.92' }));
+
+  // Back wall
+  root.appendChild(el('a-plane', { position: '0 2.75 -5', width: '14', height: '5.5',
+    material: `color: ${s.wallBg}; roughness: 0.9` }));
+
+  // Header
+  root.appendChild(el('a-text', { value: String(s.id).padStart(2, '0'), position: '-5.9 4.9 -4.98',
+    color: s.color, width: '3.5', anchor: 'center', align: 'center', opacity: '0.35' }));
+  root.appendChild(el('a-text', { value: s.name, position: '0 4.72 -4.98',
+    color: s.color, width: '6', anchor: 'center', align: 'center' }));
+  root.appendChild(el('a-text', { value: s.date, position: '0 4.34 -4.98',
+    color: '#999', width: '2.8', anchor: 'center', align: 'center' }));
+
+  // Section headers
+  root.appendChild(el('a-text', { value: 'THE PHYSICS', position: '-4.5 3.9 -4.98',
+    color: s.color, width: '2.6', anchor: 'center', align: 'center' }));
+  root.appendChild(el('a-text', { value: 'THE MUSIC', position: '4.5 3.9 -4.98',
+    color: s.color, width: '2.6', anchor: 'center', align: 'center' }));
+
+  // Three framed media slots: physics (left), center, music (right)
+  // Raised so the captions below them clear the wall paragraphs
+  const slots = [
+    { name: 'physics', x: -4.5, y: 2.8, w: 2.5, h: 1.7, label: s.phLabel },
+    { name: 'center',  x: 0,    y: 2.7, w: 2.9, h: 1.95, label: s.ctLabel },
+    { name: 'music',   x: 4.5,  y: 2.8, w: 2.5, h: 1.7, label: s.muLabel }
+  ];
+  for (const slot of slots) {
+    // Frame border (slightly larger dark plane behind)
+    root.appendChild(el('a-plane', { position: `${slot.x} ${slot.y} -4.985`, width: slot.w + 0.12, height: slot.h + 0.12,
+      material: 'color: #2b2b2b; roughness: 0.4' }));
+    // Media surface (placeholder tint; replaced by image/video when the asset exists)
+    root.appendChild(el('a-plane', { id: `${s.key}-${slot.name}-plane`,
+      position: `${slot.x} ${slot.y} -4.98`, width: slot.w, height: slot.h,
+      material: `color: #1c1c20; roughness: 0.6` }));
+    // Placeholder caption inside the frame (hidden when a real image loads)
+    root.appendChild(el('a-text', { id: `${s.key}-${slot.name}-ph`,
+      value: `[ ${slot.label} ]`, position: `${slot.x} ${slot.y} -4.975`,
+      color: '#5a5a66', width: '2', anchor: 'center', align: 'center', 'wrap-count': '26' }));
+    // Caption below the frame, on a small wooden plaque
+    const cap = el('a-text', { value: slot.label, position: `${slot.x} ${slot.y - slot.h / 2 - 0.14} -4.98`,
+      color: '#cfc0a2', width: '1.9', anchor: 'center', align: 'center', 'wrap-count': '32' });
+    root.appendChild(cap);
+    addPlaque(root, cap, -4.992, 0.05);
+  }
+
+  // Wall texts — each on a framed wooden board
+  const wallTexts = [
+    { value: s.wallPhysics, position: '-4.5 0.85 -4.98', color: '#c5c5c5', width: '3.1' },
+    { value: s.wallConnection, position: '0 0.78 -4.98', color: '#e2e2e2', width: '3.3' },
+    { value: s.wallMusic, position: '4.5 0.85 -4.98', color: '#c5c5c5', width: '3.1' }
+  ];
+  for (const wt of wallTexts) {
+    const te = el('a-text', { value: wt.value, position: wt.position, color: wt.color,
+      width: wt.width, anchor: 'center', align: 'center', 'wrap-count': '38', 'line-height': '68' });
+    root.appendChild(te);
+    addPlaque(root, te, -4.992, 0.13);
+  }
+
+  // Lights in station color
+  root.appendChild(el('a-light', { type: 'point', position: '0 4.8 -2', intensity: '0.5', color: s.color, distance: '13', decay: '2' }));
+  root.appendChild(el('a-light', { type: 'point', position: '-4.5 4.5 -3.5', intensity: '0.35', color: s.color, distance: '9', decay: '2' }));
+  root.appendChild(el('a-light', { type: 'point', position: '4.5 4.5 -3.5', intensity: '0.35', color: s.color, distance: '9', decay: '2' }));
+
+  // Floor marker (on the visitor viewing ring) + accent line
+  root.appendChild(el('a-ring', { position: '0 0.02 4', rotation: '-90 0 0',
+    'radius-inner': '0.32', 'radius-outer': '0.5', color: s.color, opacity: '0.22' }));
+  root.appendChild(el('a-plane', { position: '0 0.18 -4.996', width: '12.5', height: '0.02',
+    material: `color: ${s.color}; opacity: 0.35` }));
+
+  sceneEl.appendChild(root);
+}
+
+// The Great Door (slot 0 / station 11) is static HTML in the scene above
+for (const s of stations) if (s.id >= 1 && s.id <= 10) buildStation(s);
+
+// Size the wooden plaques once text meshes exist (font loads async, so retry a few times)
+sceneEl.addEventListener('loaded', () => {
+  [400, 1200, 2500, 5000].forEach(ms => setTimeout(fitPlaques, ms));
+});
+
+/* ============================================================
+   LOCAL MEDIA — auto-detects files in ./assets/sNN/ and swaps in.
+   Drop files named:  sNN/sNN_physics.jpg  sNN/sNN_center.jpg
+   sNN/sNN_music.jpg  sNN/sNN_audio.mp3  sNN/sNN_video.mp4
+   ============================================================ */
+async function exists(url) {
+  try { const r = await fetch(url, { method: 'HEAD' }); return r.ok; }
+  catch { return false; }
+}
+
+async function detectAssets() {
+  for (const s of stations) {
+    if (s.id < 1 || s.id > 10) continue;
+    const k = s.key;
+    assetsAvailable[k] = {};
+    // Images
+    for (const slot of ['physics', 'center', 'music']) {
+      const url = `assets/${k}/${k}_${slot}.jpg`;
+      if (await exists(url)) {
+        assetsAvailable[k][slot] = url;
+        const plane = document.getElementById(`${k}-${slot}-plane`);
+        const ph = document.getElementById(`${k}-${slot}-ph`);
+        if (plane) plane.setAttribute('material', `shader: flat; src: url(${url}); color: #fff`);
+        if (ph) ph.setAttribute('visible', 'false');
+      }
+    }
+    // Audio
+    const audioUrl = `assets/${k}/${k}_audio.mp3`;
+    if (await exists(audioUrl)) {
+      assetsAvailable[k].audio = audioUrl;
+      audioPlayers[k] = new Audio(audioUrl);
+    }
+    // Video (replaces center slot; plays via SPACE-adjacent V key or panel button)
+    const videoUrl = `assets/${k}/${k}_video.mp4`;
+    if (await exists(videoUrl)) {
+      assetsAvailable[k].video = videoUrl;
+      const vid = document.createElement('video');
+      vid.id = `vid-${k}`; vid.src = videoUrl; vid.loop = true; vid.playsInline = true;
+      vid.preload = 'metadata'; vid.crossOrigin = 'anonymous';
+      document.getElementById('asset-store').appendChild(vid);
+      videoEls[k] = vid;
+      const plane = document.getElementById(`${k}-center-plane`);
+      const ph = document.getElementById(`${k}-center-ph`);
+      if (plane) plane.setAttribute('material', `shader: flat; src: #vid-${k}; color: #fff`);
+      if (ph) ph.setAttribute('visible', 'false');
+    }
+    // Refresh panel buttons if we're standing at this station
+    if (currentStation === s.id) showInfoPanel(s);
+  }
+}
+
+function stopAllMedia() {
+  for (const a of Object.values(audioPlayers)) { a.pause(); }
+  for (const v of Object.values(videoEls)) { v.pause(); }
+  updateAudioButton();
+}
+
+function toggleStationAudio() {
+  const s = stations[currentStation];
+  if (!s || !audioPlayers[s.key]) return;
+  const a = audioPlayers[s.key];
+  if (a.paused) { stopAllMedia(); a.play().catch(() => {}); }
+  else a.pause();
+  updateAudioButton();
+}
+
+function toggleStationVideo() {
+  const s = stations[currentStation];
+  if (!s || !videoEls[s.key]) return;
+  const v = videoEls[s.key];
+  if (v.paused) { stopAllMedia(); v.play().catch(() => {}); }
+  else v.pause();
+  updateAudioButton();
+}
+
+function updateAudioButton() {
+  const s = stations[currentStation];
+  if (!s) return;
+  const btnA = document.getElementById('btn-audio');
+  if (btnA && audioPlayers[s.key]) {
+    btnA.innerHTML = audioPlayers[s.key].paused ? '&#9654; Play Music' : '&#10074;&#10074; Pause Music';
+  }
+  const btnV = document.getElementById('btn-video');
+  if (btnV && videoEls[s.key]) {
+    btnV.innerHTML = videoEls[s.key].paused ? '&#9654; Play Video' : '&#10074;&#10074; Pause Video';
+  }
+}
+
+/* ============================================================
+   NAVIGATION + INFO PANEL
+   ============================================================ */
+let currentStation = 0;
+let panelCollapsed = false;
+
+// Build nav sidebar from data
+const navBox = document.getElementById('nav-items');
+for (const s of stations) {
+  const b = document.createElement('button');
+  b.className = 'nav-item';
+  b.onclick = () => { teleport(s.id); toggleNav(); };
+  if (s.id === 0) b.innerHTML = '<span class="nav-num">&#9654;</span> Rotunda Center';
+  else if (s.id === 11) b.innerHTML = '<span class="nav-num">&#9632;</span> The Great Door';
+  else b.innerHTML = `<span class="nav-num">${String(s.id).padStart(2, '0')}</span> ${s.name}<span class="nav-date">${s.date}</span>`;
+  navBox.appendChild(b);
+}
+
+function enterExhibition() {
+  document.getElementById('instructions').classList.add('hidden');
+  const canvas = sceneEl.canvas;
+  if (canvas) { try { canvas.requestPointerLock(); } catch (e) {} }
+}
+
+function toggleNav() {
+  document.getElementById('nav-panel').classList.toggle('open');
+}
+
+function faceYaw(yawDeg) {
+  const rig = document.getElementById('rig');
+  const cam = document.getElementById('cam');
+  rig.setAttribute('rotation', `0 ${yawDeg} 0`);
+  cam.setAttribute('position', '0 1.6 0');
+  const lc = cam.components && cam.components['look-controls'];
+  if (lc && lc.yawObject && lc.pitchObject) {
+    lc.yawObject.rotation.y = 0;
+    lc.pitchObject.rotation.x = 0;
+  }
+}
+
+function teleport(id) {
+  const s = stations[id];
+  stopAllMedia();
+  const rig = document.getElementById('rig');
+  if (s.angle === undefined) {              // center of the rotunda
+    rig.setAttribute('position', '0 0 0');
+    faceYaw(0);                             // face the Great Door
+  } else {
+    const p = slotXZ(s.angle, STAND_R);
+    rig.setAttribute('position', `${p.x.toFixed(3)} 0 ${p.z.toFixed(3)}`);
+    faceYaw(-s.angle);                      // face this slot's wall
+  }
+  setStation(id);
+}
+
+function stepStation(dir) {
+  const next = Math.min(11, Math.max(0, currentStation + dir));
+  if (next !== currentStation) teleport(next);
+}
+
+function collapsePanel() {
+  panelCollapsed = true;
+  document.getElementById('info-panel').classList.remove('visible');
+}
+
+let dwellTimer = null;
+
+function setStation(id) {
+  if (id === currentStation) return;
+  stopAllMedia();
+  currentStation = id;
+  panelCollapsed = false;
+  const s = stations[id];
+
+  // Auto-play this station's music after 3 seconds of dwelling here
+  if (dwellTimer) clearTimeout(dwellTimer);
+  if (s.id >= 1 && s.id <= 10) {
+    dwellTimer = setTimeout(() => {
+      if (currentStation !== id) return;
+      const a = audioPlayers[s.key];
+      if (a && a.paused) { stopAllMedia(); a.play().catch(() => {}); updateAudioButton(); }
+    }, 3000);
+  }
+  document.getElementById('current-station-label').textContent =
+    s.id === 0 ? 'The Rotunda Center' : s.id === 11 ? 'The Great Door -- where the circle begins and ends' : `Station ${String(s.id).padStart(2, '0')} of 10 -- ${s.name}`;
+  document.querySelectorAll('.nav-item').forEach((elm, i) => elm.classList.toggle('active', i === id));
+  const lb = document.getElementById('btn-letter');
+  if (lb) lb.style.opacity = s.physics ? '1' : '0.35';
+  showInfoPanel(s);
+}
+
+function showInfoPanel(s) {
+  const panel = document.getElementById('info-panel');
+  if (!s.physics) { panel.classList.remove('visible'); return; }
+  if (panelCollapsed) return;
+
+  const titleEl = document.getElementById('panel-title');
+  titleEl.textContent = `Station ${String(s.id).padStart(2, '0')} -- ${s.name}`;
+  titleEl.style.color = s.color;
+  document.getElementById('panel-date').textContent = s.date;
+
+  // The panel carries the short form: the connection and the listening cue.
+  // The full physics/music discussion and curatorial rationale live in the Read More letter.
+  document.getElementById('panel-text').innerHTML = s.connection + '<br><br><em>' + s.instruction + '</em>';
+
+  let mediaHTML = '';
+  if (assetsAvailable[s.key] && assetsAvailable[s.key].audio) {
+    mediaHTML += `<button id="btn-audio" class="media-btn warm" onclick="toggleStationAudio()">&#9654; Play Music</button>`;
+  } else {
+    mediaHTML += `<button class="media-btn disabled" title="Add assets/${s.key}/${s.key}_audio.mp3 to enable">&#9654; Music (add ${s.key}_audio.mp3)</button>`;
+  }
+  if (assetsAvailable[s.key] && assetsAvailable[s.key].video) {
+    mediaHTML += `<button id="btn-video" class="media-btn warm" onclick="toggleStationVideo()">&#9654; Play Video</button>`;
+  }
+  mediaHTML += `<button class="media-btn" onclick="openLetter()">&#9993; Read More</button>`;
+  if (s.ytMusic) mediaHTML += `<a href="${s.ytMusic}" target="_blank" class="media-btn warm">Watch Performance &#8599;</a>`;
+  if (s.ytPhysics) mediaHTML += `<a href="${s.ytPhysics}" target="_blank" class="media-btn">Watch the Physics &#8599;</a>`;
+  if (s.ytExtra) mediaHTML += `<a href="${s.ytExtra.url}" target="_blank" class="media-btn">${s.ytExtra.label} &#8599;</a>`;
+  document.getElementById('panel-media').innerHTML = mediaHTML;
+
+  panel.classList.add('visible');
+}
+
+/* ============================================================
+   READ MORE — letter from the curator
+   ============================================================ */
+function openLetter() {
+  const s = stations[currentStation];
+  if (!s || !s.physics) return;
+  document.getElementById('letter-station').textContent = `Station ${String(s.id).padStart(2, '0')} of 10`;
+  document.getElementById('letter-title').textContent = s.name;
+  document.getElementById('letter-date').textContent = s.date;
+  document.getElementById('letter-body').innerHTML =
+    '<h3>The Physics</h3><p>' + s.physics + '</p>' +
+    '<h3>The Music</h3><p>' + s.music + '</p>' +
+    '<h3>Why This Work Is in the Exhibition</h3><p>' + s.connection + '</p><p>' + s.why + '</p>';
+  document.getElementById('letter-overlay').classList.add('visible');
+  if (document.exitPointerLock) document.exitPointerLock();
+}
+
+function closeLetter() {
+  document.getElementById('letter-overlay').classList.remove('visible');
+}
+
+/* Proximity detection: angular position around the rotunda decides the station */
+const camWorldPos = new THREE.Vector3();
+setInterval(() => {
+  const cam = document.getElementById('cam');
+  if (!cam.object3D) return;
+  cam.object3D.getWorldPosition(camWorldPos);
+  const r = Math.hypot(camWorldPos.x, camWorldPos.z);
+  if (r < 7) { setStation(0); return; }        // near the center dais
+  let ang = Math.atan2(camWorldPos.x, -camWorldPos.z) * 180 / Math.PI;
+  if (ang < 0) ang += 360;
+  const slot = Math.round(ang / STEP) % 11;    // slot 0 is the Great Door
+  setStation(slot === 0 ? 11 : slot);
+}, 400);
+
+/* Keyboard shortcuts (work while pointer-locked) */
+document.addEventListener('keydown', (e) => {
+  if (e.code === 'KeyN') stepStation(1);
+  else if (e.code === 'KeyB') stepStation(-1);
+  else if (e.code === 'Space') { e.preventDefault(); toggleStationAudio(); }
+  else if (e.code === 'KeyV') toggleStationVideo();
+  else if (e.code === 'KeyR') {
+    document.getElementById('letter-overlay').classList.contains('visible') ? closeLetter() : openLetter();
+  }
+  else if (e.code === 'Escape') closeLetter();
+});
+
+/* Click canvas re-locks pointer */
+sceneEl.addEventListener('loaded', () => {
+  sceneEl.canvas.addEventListener('click', () => {
+    if (!document.pointerLockElement) { try { sceneEl.canvas.requestPointerLock(); } catch (e) {} }
+  });
+  detectAssets();
+
+  /* Deep link: ?station=N opens directly at that station (0=entrance, 1-10, 11=exit) */
+  const param = new URLSearchParams(location.search).get('station');
+  if (param !== null) {
+    const id = Math.min(11, Math.max(0, parseInt(param, 10) || 0));
+    document.getElementById('instructions').classList.add('hidden');
+    teleport(id);
+  }
+});
+</script>
+</body>
+</html>

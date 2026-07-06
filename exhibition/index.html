@@ -98,6 +98,8 @@
     #info-panel .station-date { font-size: 13px; color: #888; }
     #info-panel .panel-text { font-size: 13px; color: #ccc; line-height: 1.75; max-width: 850px; }
     #info-panel .panel-text em { color: #eee; }
+    #info-panel .excerpt-note { font-size: 12px; color: #b9a575; margin-top: 10px; }
+    #info-panel .excerpt-note a { color: #e6c98a; }
     .media-row { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
     .media-btn {
       background: rgba(80,200,255,0.12); color: #50c8ff; border: 1px solid rgba(80,200,255,0.35);
@@ -156,11 +158,10 @@
      The works are arranged chronologically in a circular gallery around a single door.</p>
   <button class="start-btn" onclick="enterExhibition()">Enter Exhibition</button>
   <div class="controls-grid">
-    <b>W A S D</b><span>walk</span>
+    <b>W A S D</b><span>walk (the &#8592; &#8593; &#8595; &#8594; arrow keys also work)</span>
     <b>Mouse</b><span>look around (click floor to capture)</span>
     <b>N / B</b><span>next / previous station</span>
     <b>Space</b><span>play or pause this station's music</span>
-    <b>V</b><span>play or pause this station's video</span>
     <b>R</b><span>read more &mdash; a letter about the work</span>
     <b>Esc</b><span>free the mouse (to use menus)</span>
   </div>
@@ -202,7 +203,7 @@
   </div>
 </div>
 
-<div id="hud">W A S D move &nbsp;&bull;&nbsp; mouse look &nbsp;&bull;&nbsp; N next / B back &nbsp;&bull;&nbsp; SPACE music &nbsp;&bull;&nbsp; V video &nbsp;&bull;&nbsp; R read more &nbsp;&bull;&nbsp; ESC cursor</div>
+<div id="hud">W A S D / arrows move &nbsp;&bull;&nbsp; mouse look &nbsp;&bull;&nbsp; N next / B back &nbsp;&bull;&nbsp; SPACE music &nbsp;&bull;&nbsp; R read more &nbsp;&bull;&nbsp; ESC cursor</div>
 
 <!-- ==================== SCENE ==================== -->
 <a-scene fog="type: exponential; color: #080808; density: 0.012"
@@ -775,7 +776,23 @@ function showInfoPanel(s) {
 
   // The panel carries the short form: the connection and the listening cue.
   // The full physics/music discussion and curatorial rationale live in the Read More letter.
-  document.getElementById('panel-text').innerHTML = s.connection + '<br><br><em>' + s.instruction + '</em>';
+  const EXCERPTS = {
+    s01: 'Audio excerpt: 0:09&ndash;3:09 of the full work',
+    s02: 'Audio excerpt: 0:00&ndash;3:00 (the opening)',
+    s03: 'Audio excerpt: 0:40&ndash;3:00 of Part I, The Adoration of the Earth',
+    s04: 'Audio: the complete performance (2:53)',
+    s06: 'Audio excerpt: 1:00&ndash;4:00',
+    s07: 'Audio excerpt: 0:00&ndash;3:01 (the opening)',
+    s08: 'Audio: three passages &mdash; 0:00&ndash;1:15 (the opening speech), 8:08&ndash;9:23, and 44:08&ndash;45:24 (the closing resonance)',
+    s09: 'Audio excerpt: 2:38&ndash;5:38',
+    s10: 'Audio excerpt: 1:40&ndash;3:40'
+  };
+  let excerptHTML = '';
+  if (EXCERPTS[s.key]) {
+    excerptHTML = `<div class="excerpt-note">&#9835; ${EXCERPTS[s.key]}` +
+      (s.ytMusic ? ` &mdash; <a href="${s.ytMusic}" target="_blank">full performance &#8599;</a>` : '') + `</div>`;
+  }
+  document.getElementById('panel-text').innerHTML = s.connection + '<br><br><em>' + s.instruction + '</em>' + excerptHTML;
 
   let mediaHTML = '';
   if (assetsAvailable[s.key] && assetsAvailable[s.key].audio) {
